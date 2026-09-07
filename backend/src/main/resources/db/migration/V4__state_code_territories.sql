@@ -1,0 +1,6 @@
+insert into state_code (code, name) values
+    ('AS', 'American Samoa'),
+    ('GU', 'Guam'),
+    ('MP', 'Northern Mariana Islands'),
+    ('PR', 'Puerto Rico'),
+    ('VI', 'U.S. Virgin Islands');

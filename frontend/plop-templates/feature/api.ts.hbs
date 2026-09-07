@@ -1,0 +1,27 @@
+import { apiClient, type Page } from '../../../lib/api-client';
+import type { {{pascalCase name}}FormValues, {{pascalCase name}}Response } from '../types/{{camelCase name}}';
+
+export interface {{pascalCase name}}SearchParams {
+  q?: string;
+  page: number;
+  size: number;
+}
+
+export async function fetch{{pascalCase name}}s(params: {{pascalCase name}}SearchParams): Promise<Page<{{pascalCase name}}Response>> {
+  const { data } = await apiClient.get<Page<{{pascalCase name}}Response>>('/{{kebabCase apiPath}}', { params });
+  return data;
+}
+
+export async function create{{pascalCase name}}(values: {{pascalCase name}}FormValues): Promise<{{pascalCase name}}Response> {
+  const { data } = await apiClient.post<{{pascalCase name}}Response>('/{{kebabCase apiPath}}', values);
+  return data;
+}
+
+export async function update{{pascalCase name}}(id: number, values: {{pascalCase name}}FormValues): Promise<{{pascalCase name}}Response> {
+  const { data } = await apiClient.put<{{pascalCase name}}Response>(`/{{kebabCase apiPath}}/${id}`, values);
+  return data;
+}
+
+export async function delete{{pascalCase name}}(id: number): Promise<void> {
+  await apiClient.delete(`/{{kebabCase apiPath}}/${id}`);
+}

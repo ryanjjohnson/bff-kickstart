@@ -1,0 +1,44 @@
+/*
+ * bff-kickstart branding for the Account Console (keycloak.v3 React SPA).
+ * CSS-only override - no JavaScript authored here.
+ */
+
+:root {
+  --gizmo-forest: #0b3d2e;
+  --gizmo-green: #0f6a44;
+  --gizmo-accent: #2fa36b;
+  --gizmo-accent-hover: #248257;
+
+  --pf-v5-global--primary-color--100: var(--gizmo-green);
+  --pf-v5-global--primary-color--200: var(--gizmo-forest);
+  --pf-v5-global--link--Color: var(--gizmo-accent);
+  --pf-v5-global--link--Color--hover: var(--gizmo-accent-hover);
+}
+
+header.pf-v5-c-masthead,
+.pf-v5-c-masthead {
+  background-color: var(--gizmo-forest) !important;
+  border-bottom: 3px solid var(--gizmo-green);
+}
+
+.pf-v5-c-masthead__brand img {
+  max-height: 36px;
+}
+
+.pf-v5-c-nav__link.pf-m-current,
+.pf-v5-c-nav__link[aria-current="page"] {
+  color: var(--gizmo-green) !important;
+  border-color: var(--gizmo-green) !important;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: var(--gizmo-forest);
+}
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background-color: var(--gizmo-green);
+}
+
+.pf-v5-c-title {
+  color: var(--gizmo-forest);
+}

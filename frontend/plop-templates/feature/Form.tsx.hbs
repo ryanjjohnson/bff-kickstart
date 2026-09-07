@@ -1,0 +1,43 @@
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@heroui/react';
+import { TextInputField } from '../../../components/form/TextInputField';
+import { FormErrorSummary } from '../../../components/form/FormErrorSummary';
+import { useApplyServerErrors } from '../../../components/form/useApplyServerErrors';
+import { {{camelCase name}}Schema, type {{pascalCase name}}FormValues } from '../types/{{camelCase name}}';
+
+interface {{pascalCase name}}FormProps {
+  defaultValues?: Partial<{{pascalCase name}}FormValues>;
+  onSubmit: (values: {{pascalCase name}}FormValues) => void;
+  onCancel: () => void;
+  isSubmitting?: boolean;
+  /** The failed create/update mutation's error, if any - see useApplyServerErrors. */
+  serverError?: unknown;
+}
+
+export function {{pascalCase name}}Form({ defaultValues, onSubmit, onCancel, isSubmitting, serverError }: {{pascalCase name}}FormProps) {
+  const { control, handleSubmit, setError } = useForm<{{pascalCase name}}FormValues>({
+    resolver: zodResolver({{camelCase name}}Schema),
+    defaultValues: {
+      name: '',
+      ...defaultValues,
+    },
+  });
+  useApplyServerErrors(setError, serverError);
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+      <FormErrorSummary error={serverError} />
+      {/* TODO: replace with the real fields for {{name}} */}
+      <TextInputField control={control} name="name" label="Name" isRequired />
+      <div className="mt-2 flex justify-end gap-2">
+        <Button type="button" variant="ghost" onPress={onCancel} isDisabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button type="submit" isDisabled={isSubmitting}>
+          {isSubmitting ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+    </form>
+  );
+}

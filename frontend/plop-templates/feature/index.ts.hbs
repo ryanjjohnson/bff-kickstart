@@ -1,0 +1,15 @@
+/**
+ * Public surface of the {{name}} feature. Other features must import from
+ * here, never from a sibling file directly - anything not re-exported below
+ * is private to this feature.
+ */
+import type { AppRoute } from '../../lib/appRoute';
+import { {{pascalCase name}}Page } from './components/{{pascalCase name}}Page';
+
+export { {{pascalCase name}}Page } from './components/{{pascalCase name}}Page';
+
+export const {{camelCase apiPath}}Route: AppRoute = {
+  path: '/{{kebabCase apiPath}}',
+  label: '{{pascalCase name}}s',
+  Component: {{pascalCase name}}Page,
+};

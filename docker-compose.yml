@@ -1,0 +1,140 @@
+name: bff-kickstart
+
+services:
+  postgres-keycloak:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    volumes:
+      - postgres_keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER:-keycloak}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [bff-kickstart]
+
+  keycloak:
+    # Custom image, not the stock quay.io/keycloak/keycloak:26.7.3 - bakes in the
+    # bff-kickstart theme (login/registration/account/email) and the bff-registration-spi
+    # provider (see keycloak/Dockerfile). Build the SPI jar first:
+    #   mvn -f keycloak/providers/bff-registration-spi/pom.xml clean package
+    build:
+      context: ./keycloak
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/${KEYCLOAK_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      # Fixed hostname so the issuer/URLs Keycloak embeds in tokens are identical
+      # whether it's reached from the browser (via the "keycloak" hosts-file entry)
+      # or from another container (via docker's internal DNS) - both resolve to
+      # this same host:port combination. See README "One-time host setup".
+      # NOTE: this is Keycloak's own IdP configuration, not templated by
+      # FRONTEND_BASE_PATH/BACKEND_BASE_PATH below - reusing this stack under a
+      # different realm name or hostname means also editing
+      # keycloak/realm-export/gizmoshop-realm.json by hand (redirect URIs,
+      # web origins, post-logout redirect URIs, backchannel logout URL).
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    # Lets Keycloak's back-channel logout call reach the backend directly
+    # (container-to-container or container-to-host) - see the client's
+    # backchannel.logout.url in the realm export.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./keycloak/realm-export:/opt/keycloak/data/import
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '\"status\": \"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks: [bff-kickstart]
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      # Web UI for viewing "sent" mail - nothing is actually delivered anywhere.
+      # SMTP itself (1025) stays internal-only; the backend and Keycloak reach
+      # it by service name.
+      - "8025:8025"
+    networks: [bff-kickstart]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/gizmoshop
+      KEYCLOAK_AUTH_URI: http://keycloak:8080/realms/gizmoshop/protocol/openid-connect/auth
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/gizmoshop/protocol/openid-connect/token
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/gizmoshop/protocol/openid-connect/certs
+      KEYCLOAK_USER_INFO_URI: http://keycloak:8080/realms/gizmoshop/protocol/openid-connect/userinfo
+      KEYCLOAK_INTROSPECT_URI: http://keycloak:8080/realms/gizmoshop/protocol/openid-connect/token/introspect
+      KEYCLOAK_CLIENT_ID: bff-kickstart-client
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-bff-kickstart-secret}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:${FRONTEND_DEV_PORT:-5173},http://localhost:${FRONTEND_PORT:-3000}
+      # Read by application.properties - keep these two in sync with the
+      # frontend's own BACKEND_BASE_PATH/VITE_FRONTEND_BASE_PATH
+      # (frontend/.env) and nginx.conf.template below.
+      BACKEND_PORT: ${BACKEND_PORT:-8081}
+      BACKEND_BASE_PATH: ${BACKEND_BASE_PATH:-/bff-kickstart-api}
+      FRONTEND_BASE_PATH: ${FRONTEND_BASE_PATH:-/bff-kickstart}
+      API_EXPOSED: ${API_EXPOSED:-false}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+    ports:
+      - "${BACKEND_PORT:-8081}:${BACKEND_PORT:-8081}"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks: [bff-kickstart]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the compiled JS/HTML at build time - see frontend/Dockerfile.
+        # BACKEND_BASE_PATH is deliberately not VITE_-prefixed - it's a
+        # build-time-only concern for vite.config.ts's proxy rewrite, never
+        # shipped to the client bundle. See frontend/.env's comment on it.
+        VITE_FRONTEND_BASE_PATH: ${FRONTEND_BASE_PATH:-/bff-kickstart}
+        BACKEND_BASE_PATH: ${BACKEND_BASE_PATH:-/bff-kickstart-api}
+    restart: unless-stopped
+    environment:
+      # Rendered into nginx's config at container start (envsubst) - see
+      # nginx.conf.template. Must match the build args above (same values,
+      # read twice because one is a build-time concern and one is runtime).
+      FRONTEND_BASE_PATH: ${FRONTEND_BASE_PATH:-/bff-kickstart}
+      BACKEND_BASE_PATH: ${BACKEND_BASE_PATH:-/bff-kickstart-api}
+      BACKEND_PORT: ${BACKEND_PORT:-8081}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks: [bff-kickstart]
+
+networks:
+  bff-kickstart:
+    driver: bridge
+
+volumes:
+  postgres_keycloak_data:

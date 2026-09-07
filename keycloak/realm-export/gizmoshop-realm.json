@@ -1,0 +1,664 @@
+{
+  "realm": "gizmoshop",
+  "enabled": true,
+  "displayName": "BFF Kickstart",
+  "loginTheme": "gizmoshop",
+  "accountTheme": "gizmoshop",
+  "emailTheme": "gizmoshop",
+  "sslRequired": "none",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "registrationFlow": "BFF registration",
+  "verifyEmail": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "ssoSessionIdleTimeout": 300,
+  "smtpServer": {
+    "host": "mailhog",
+    "port": "1025",
+    "from": "noreply@gizmoshop.example",
+    "fromDisplayName": "BFF Kickstart",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
+  "authenticationFlows": [
+    {
+      "alias": "BFF registration",
+      "description": "BFF registration flow - no user-chosen username",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "registration-page-form",
+          "authenticatorFlow": true,
+          "flowAlias": "BFF registration form",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": true
+        }
+      ]
+    },
+    {
+      "alias": "BFF registration form",
+      "description": "BFF registration form - system username generation + password",
+      "providerId": "form-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "bff-registration-user-creation",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "autheticatorFlow": false
+        },
+        {
+          "authenticator": "registration-password-action",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "autheticatorFlow": false
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\": [{\"name\": \"username\", \"displayName\": \"Username\", \"permissions\": {\"view\": [\"admin\"], \"edit\": [\"admin\"]}, \"multivalued\": false}, {\"name\": \"email\", \"displayName\": \"Email\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"validations\": {\"email\": {}, \"length\": {\"max\": 255}}}, {\"name\": \"firstName\", \"displayName\": \"First Name\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"middleName\", \"displayName\": \"Middle Name\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"annotations\": {\"inputHelperTextBefore\": \"Optional. Its initial is used when generating your username.\"}}, {\"name\": \"lastName\", \"displayName\": \"Last Name\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"addressLine1\", \"displayName\": \"Address Line 1\", \"group\": \"address\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"addressLine2\", \"displayName\": \"Address Line 2\", \"group\": \"address\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"city\", \"displayName\": \"City\", \"group\": \"address\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"state\", \"displayName\": \"State\", \"group\": \"address\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"validations\": {\"length\": {\"min\": 2, \"max\": 2}}, \"annotations\": {\"inputTypeMaxlength\": 2, \"inputHelperTextBefore\": \"Two-letter abbreviation, e.g. OH\"}}, {\"name\": \"zip\", \"displayName\": \"Zip Code\", \"group\": \"address\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"validations\": {\"pattern\": {\"pattern\": \"^[0-9]{5}(-[0-9]{4})?$\", \"error-message\": \"Please enter a valid zip code.\"}}}, {\"name\": \"telephone\", \"displayName\": \"Phone Number\", \"group\": \"address\", \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"validations\": {\"pattern\": {\"pattern\": \"^[0-9()+\\\\-\\\\s]{7,20}$\", \"error-message\": \"Please enter a valid phone number.\"}}}, {\"name\": \"securityQuestion\", \"displayName\": \"Security Question\", \"group\": \"security\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"annotations\": {\"inputType\": \"select\"}, \"validations\": {\"options\": {\"options\": [\"In what city did you meet your spouse/significant other?\", \"In what city or town did your mother and father meet?\", \"In what town was your first job?\", \"What is the first name of the boy or girl that you first kissed?\", \"What is the middle name of your youngest child?\", \"What is the name of your favorite childhood friend?\", \"What is your maternal grandmother's maiden name?\", \"What is your oldest sibling's birthday month and year? (e.g., January 1900)\", \"What is your oldest sibling's middle name?\", \"What school did you attend for sixth grade?\", \"What street did you live on in third grade?\", \"What was the last name of your third grade teacher?\", \"What was the make of your first car?\", \"What was the name of your first stuffed animal?\", \"What was your childhood nickname?\", \"What was your first phone number including area code? (e.g., 000-000-0000)\"]}}}, {\"name\": \"securityAnswer\", \"displayName\": \"Security Answer\", \"group\": \"security\", \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}, \"annotations\": {\"inputHelperTextBefore\": \"In the event you forget your password, we'll use this to verify your identity.\"}}, {\"name\": \"gizmo_username\", \"displayName\": \"Generated Username\", \"permissions\": {\"view\": [\"admin\"], \"edit\": [\"admin\"]}, \"annotations\": {\"inputHelperTextBefore\": \"System-generated (lastname_fm_#). Mirrors the account username; kept as a stable attribute in case the username is ever remapped.\"}}], \"groups\": [{\"name\": \"address\", \"displayHeader\": \"Mailing Address\"}, {\"name\": \"security\", \"displayHeader\": \"Password Recovery\", \"displayDescription\": \"Used to verify your identity if you forget your password.\"}], \"unmanagedAttributePolicy\": \"ADMIN_EDIT\"}"
+          ]
+        }
+      }
+    ],
+    "org.keycloak.storage.UserStorageProvider": [
+      {
+        "name": "gizmoshop-ad",
+        "providerId": "ldap",
+        "config": {
+          "enabled": [
+            "false"
+          ],
+          "priority": [
+            "1"
+          ],
+          "editMode": [
+            "READ_ONLY"
+          ],
+          "vendor": [
+            "ad"
+          ],
+          "usernameLDAPAttribute": [
+            "sAMAccountName"
+          ],
+          "rdnLDAPAttribute": [
+            "cn"
+          ],
+          "uuidLDAPAttribute": [
+            "objectGUID"
+          ],
+          "userObjectClasses": [
+            "person, organizationalPerson, user"
+          ],
+          "connectionUrl": [
+            "ldaps://CHANGE-ME-ad.gizmoshop.local:636"
+          ],
+          "usersDn": [
+            "OU=Users,DC=gizmoshop,DC=local"
+          ],
+          "authType": [
+            "simple"
+          ],
+          "bindDn": [
+            "CHANGE-ME\\svc-keycloak"
+          ],
+          "bindCredential": [
+            "CHANGE-ME"
+          ],
+          "searchScope": [
+            "2"
+          ],
+          "pagination": [
+            "true"
+          ],
+          "importEnabled": [
+            "true"
+          ],
+          "syncRegistrations": [
+            "false"
+          ],
+          "trustEmail": [
+            "true"
+          ],
+          "useKerberosForPasswordAuthentication": [
+            "false"
+          ],
+          "batchSizeForSync": [
+            "1000"
+          ],
+          "fullSyncPeriod": [
+            "-1"
+          ],
+          "changedSyncPeriod": [
+            "-1"
+          ],
+          "cachePolicy": [
+            "DEFAULT"
+          ],
+          "useTruststoreSpi": [
+            "ldapsOnly"
+          ],
+          "connectionPooling": [
+            "true"
+          ],
+          "startTls": [
+            "false"
+          ]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "bff-kickstart-client",
+      "name": "BFF Kickstart Backend",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "bff-kickstart-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/bff-kickstart/login/oauth2/code/keycloak",
+        "http://localhost:3000/bff-kickstart/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:5173/bff-kickstart/##http://localhost:3000/bff-kickstart/##http://localhost:8081/bff-kickstart/",
+        "backchannel.logout.url": "http://host.docker.internal:8081/bff-kickstart-api/logout/connect/back-channel/keycloak",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "client-roles-resource-access",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "usermodel.clientRoleMapping.clientId": "bff-kickstart-client"
+          }
+        },
+        {
+          "name": "audience-self",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "bff-kickstart-client",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "address-line-1",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "addressLine1",
+            "jsonType.label": "String",
+            "user.attribute": "addressLine1"
+          }
+        },
+        {
+          "name": "address-line-2",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "addressLine2",
+            "jsonType.label": "String",
+            "user.attribute": "addressLine2"
+          }
+        },
+        {
+          "name": "city",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "city",
+            "jsonType.label": "String",
+            "user.attribute": "city"
+          }
+        },
+        {
+          "name": "state",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "state",
+            "jsonType.label": "String",
+            "user.attribute": "state"
+          }
+        },
+        {
+          "name": "zip",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "zip",
+            "jsonType.label": "String",
+            "user.attribute": "zip"
+          }
+        },
+        {
+          "name": "telephone",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "telephone",
+            "jsonType.label": "String",
+            "user.attribute": "telephone"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "bff-kickstart-service-client",
+      "name": "BFF Kickstart Demo API Client",
+      "description": "Demo client_credentials client for machine-to-machine API callers - see README's 'API clients (resource server)' section. Requires the backend's API_EXPOSED=true.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "bff-kickstart-service-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "client-roles-resource-access",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "resource_access.bff-kickstart-client.roles",
+            "jsonType.label": "String",
+            "usermodel.clientRoleMapping.clientId": "bff-kickstart-client"
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "Internal User",
+        "description": "See MeResponse#external in the backend - carried in the realm_access.roles claim, independent of the bff-kickstart-client authorization roles below"
+      }
+    ],
+    "client": {
+      "bff-kickstart-client": [
+        {
+          "name": "Admin",
+          "description": "Full CRUD on all bff-kickstart resources"
+        },
+        {
+          "name": "Inspector",
+          "description": "Manage inspections, read facilities and permits"
+        },
+        {
+          "name": "Viewer",
+          "description": "Read-only access to all resources"
+        },
+        {
+          "name": "Data Manager",
+          "description": "Bulk CSV export/import on all resources"
+        },
+        {
+          "name": "API Developer",
+          "description": "Access to Swagger UI / API docs. Does not by itself grant access to any endpoint - the other roles above determine that."
+        },
+        {
+          "name": "API Owner",
+          "description": "Composite super-role: any operation on any API endpoint, plus Swagger access. Expands at token-issuance time to Admin+Inspector+Viewer+Data Manager+API Developer - no @PreAuthorize changes needed for it to work.",
+          "composite": true,
+          "composites": {
+            "client": {
+              "bff-kickstart-client": [
+                "Admin",
+                "Inspector",
+                "Viewer",
+                "Data Manager",
+                "API Developer"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@gizmoshop.test",
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "Admin",
+          "Inspector",
+          "Viewer",
+          "Data Manager"
+        ]
+      },
+      "realmRoles": [
+        "Internal User"
+      ],
+      "attributes": {
+        "addressLine1": [
+          "100 Gizmo Way"
+        ],
+        "addressLine2": [
+          "Suite 1"
+        ],
+        "city": [
+          "Springfield"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45501"
+        ],
+        "telephone": [
+          "614-555-0100"
+        ]
+      }
+    },
+    {
+      "username": "inspector",
+      "email": "inspector@gizmoshop.test",
+      "firstName": "Ivan",
+      "lastName": "Inspector",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "Inspector",
+          "Viewer"
+        ]
+      },
+      "realmRoles": [
+        "Internal User"
+      ],
+      "attributes": {
+        "addressLine1": [
+          "425 Assembly Line Dr"
+        ],
+        "addressLine2": [
+          ""
+        ],
+        "city": [
+          "Springfield"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45502"
+        ],
+        "telephone": [
+          "614-555-0142"
+        ]
+      }
+    },
+    {
+      "username": "viewer",
+      "email": "viewer@gizmoshop.test",
+      "firstName": "Vera",
+      "lastName": "Viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "Viewer"
+        ]
+      },
+      "attributes": {
+        "addressLine1": [
+          "78 Bolt Court"
+        ],
+        "addressLine2": [
+          ""
+        ],
+        "city": [
+          "Rivertown"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45610"
+        ],
+        "telephone": [
+          "614-555-0110"
+        ]
+      }
+    },
+    {
+      "username": "manager",
+      "email": "manager@gizmoshop.test",
+      "firstName": "Dana",
+      "lastName": "Manager",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "Viewer",
+          "Data Manager"
+        ]
+      },
+      "attributes": {
+        "addressLine1": [
+          "310 Foundry Street"
+        ],
+        "addressLine2": [
+          ""
+        ],
+        "city": [
+          "Springfield"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45501"
+        ],
+        "telephone": [
+          "614-555-0177"
+        ]
+      }
+    },
+    {
+      "username": "apideveloper",
+      "email": "apideveloper@gizmoshop.test",
+      "firstName": "Devon",
+      "lastName": "Developer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "API Developer",
+          "Viewer"
+        ]
+      },
+      "attributes": {
+        "addressLine1": [
+          "100 Gizmo Way"
+        ],
+        "addressLine2": [
+          "Suite 1"
+        ],
+        "city": [
+          "Springfield"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45501"
+        ],
+        "telephone": [
+          "614-555-0188"
+        ]
+      }
+    },
+    {
+      "username": "apiowner",
+      "email": "apiowner@gizmoshop.test",
+      "firstName": "Olivia",
+      "lastName": "Owner",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "API Owner"
+        ]
+      },
+      "attributes": {
+        "addressLine1": [
+          "100 Gizmo Way"
+        ],
+        "addressLine2": [
+          "Suite 1"
+        ],
+        "city": [
+          "Springfield"
+        ],
+        "state": [
+          "OH"
+        ],
+        "zip": [
+          "45501"
+        ],
+        "telephone": [
+          "614-555-0199"
+        ]
+      }
+    },
+    {
+      "username": "service-account-bff-kickstart-service-client",
+      "serviceAccountClientId": "bff-kickstart-service-client",
+      "enabled": true,
+      "clientRoles": {
+        "bff-kickstart-client": [
+          "Viewer",
+          "Data Manager"
+        ]
+      }
+    }
+  ]
+}

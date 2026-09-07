@@ -1,0 +1,41 @@
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  create{{pascalCase name}},
+  delete{{pascalCase name}},
+  fetch{{pascalCase name}}s,
+  update{{pascalCase name}},
+  type {{pascalCase name}}SearchParams,
+} from '../api/{{kebabCase apiPath}}';
+import type { {{pascalCase name}}FormValues } from '../types/{{camelCase name}}';
+
+export function use{{pascalCase name}}s(params: {{pascalCase name}}SearchParams) {
+  return useQuery({
+    queryKey: ['{{kebabCase apiPath}}', params],
+    queryFn: () => fetch{{pascalCase name}}s(params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCreate{{pascalCase name}}() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: {{pascalCase name}}FormValues) => create{{pascalCase name}}(values),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['{{kebabCase apiPath}}'] }),
+  });
+}
+
+export function useUpdate{{pascalCase name}}(id: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: {{pascalCase name}}FormValues) => update{{pascalCase name}}(id, values),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['{{kebabCase apiPath}}'] }),
+  });
+}
+
+export function useDelete{{pascalCase name}}() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => delete{{pascalCase name}}(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['{{kebabCase apiPath}}'] }),
+  });
+}

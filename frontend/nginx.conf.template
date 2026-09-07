@@ -1,0 +1,122 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location = /health {
+        return 200 'ok';
+        add_header Content-Type text/plain;
+    }
+
+    location = / {
+        # $http_host (not $host, which drops the port): nginx's `return` with a
+        # bare path auto-absolutizes using $scheme://$host, silently dropping
+        # a non-default port - the same gotcha as the Host header below.
+        return 302 $scheme://$http_host${FRONTEND_BASE_PATH}/;
+    }
+
+    # The backend has no browser-facing path of its own - server.servlet.context-path
+    # (${BACKEND_BASE_PATH}) is purely internal now, never reachable directly.
+    # Everything the backend serves is nested under the frontend's own path
+    # instead, via these four locations, each rewriting the matched external
+    # prefix onto the backend's real internal one (proxy_pass with a trailing
+    # path replaces the location's matched prefix - that's what does the
+    # rewriting here, same mechanism as ordinary nginx prefix-proxying).
+    # /logout needs an exact match (no sub-path is ever called through this
+    # proxy - the back-channel logout endpoint is called directly, server-to-
+    # server, by Keycloak, never by the browser); the other three are always
+    # called with something after them.
+    #
+    # $http_host (not $host, which drops the port) preserves the original
+    # "host:port" the browser used, matching the Vite dev proxy, so Spring
+    # computes the same scheme+host half of its OAuth2 {baseUrl}.
+    # X-Forwarded-Prefix supplies the path half - Spring's ForwardedHeaderFilter
+    # (server.forward-headers-strategy=framework) uses it to override what it
+    # thinks its own context-path is for URL generation, regardless of
+    # server.servlet.context-path's actual (internal-only) value. Verified
+    # directly against the backend:
+    #   curl -H "X-Forwarded-Prefix: /bff-kickstart" \
+    #     http://localhost:8081${BACKEND_BASE_PATH}/oauth2/authorization/keycloak
+    #   -> redirect_uri=.../bff-kickstart/login/oauth2/code/keycloak
+    #
+    # X-Forwarded-Proto is deliberately NOT set: Spring's ForwardedHeaderFilter
+    # resets the port to the scheme's default (80/443) when Proto is forwarded
+    # without a matching X-Forwarded-Port, which breaks this same redirect-uri
+    # computation - and there's no TLS termination happening here for it to
+    # convey anyway.
+    location ${FRONTEND_BASE_PATH}/api/ {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/api/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    # Swagger/OpenAPI (springdoc) - only present at all when SWAGGER_ENABLED=true
+    # on the backend, and gated further behind the API Developer role once you're
+    # there (see SecurityConfig). Proxied the same way as /api/ above so the
+    # backend never needs a browser-facing port of its own for this either.
+    location ${FRONTEND_BASE_PATH}/v3/api-docs {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/v3/api-docs;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    location ${FRONTEND_BASE_PATH}/swagger-ui/ {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/swagger-ui/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    # springdoc's own default entry point - it 302s to swagger-ui/index.html.
+    location = ${FRONTEND_BASE_PATH}/swagger-ui.html {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/swagger-ui.html;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    location ${FRONTEND_BASE_PATH}/oauth2/ {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/oauth2/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    location ${FRONTEND_BASE_PATH}/login/ {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/login/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    location = ${FRONTEND_BASE_PATH}/logout {
+        proxy_pass http://backend:${BACKEND_PORT}${BACKEND_BASE_PATH}/logout;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Prefix ${FRONTEND_BASE_PATH};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cookie_path / /;
+    }
+
+    # The SPA build output (base: '${FRONTEND_BASE_PATH}/' in vite.config.ts,
+    # via VITE_FRONTEND_BASE_PATH) is copied into this same subdirectory in the
+    # Dockerfile, so root + try_files here mirrors the physical layout one-to-one.
+    location ${FRONTEND_BASE_PATH}/ {
+        try_files $uri $uri/ ${FRONTEND_BASE_PATH}/index.html;
+    }
+}

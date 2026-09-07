@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/*
+ * Self-hosted (no external font CDN) - see src/assets/fonts/. Matches the
+ * subset of weights actually used in this app.
+ */
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/roboto-condensed-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/roboto-condensed-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/roboto-condensed-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/roboto-condensed-700.woff2') format('woff2');
+}
+
+/*
+ * gizmoshop brand palette. Un-layered, so it wins over @heroui/styles' own
+ * (layered) definitions without needing !important - see
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/@layer for why layered
+ * rules always lose to unlayered ones regardless of source order.
+ */
+:root {
+  --accent: #1F8A56;
+  --accent-foreground: #ffffff;
+}
+
+body {
+  font-family: 'Roboto Condensed', sans-serif;
+}

@@ -1,0 +1,15 @@
+import { z } from 'zod';
+
+// TODO: replace these placeholder fields with the real shape of {{name}}.
+export const {{camelCase name}}Schema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(200, 'Name must be at most 200 characters'),
+});
+
+export type {{pascalCase name}}FormValues = z.infer<typeof {{camelCase name}}Schema>;
+
+export interface {{pascalCase name}}Response {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}

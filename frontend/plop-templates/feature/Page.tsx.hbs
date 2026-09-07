@@ -1,0 +1,147 @@
+import { useState } from 'react';
+import { Button, Modal, toast, useOverlayState } from '@heroui/react';
+import { DataTable, type DataTableColumn } from '../../../components/DataTable';
+import { ConfirmDeleteDialog } from '../../../components/ConfirmDeleteDialog';
+import { useAuth } from '../../../auth/AuthContext';
+import { showActionError } from '../../../lib/api-client';
+import type { {{pascalCase name}}FormValues, {{pascalCase name}}Response } from '../types/{{camelCase name}}';
+import { useCreate{{pascalCase name}}, useDelete{{pascalCase name}}, use{{pascalCase name}}s, useUpdate{{pascalCase name}} } from '../hooks/use{{pascalCase name}}s';
+import { {{pascalCase name}}Form } from './{{pascalCase name}}Form';
+
+const PAGE_SIZE = 10;
+
+export function {{pascalCase name}}Page() {
+  const { hasRole } = useAuth();
+  const canEdit = hasRole('Admin');
+
+  const [page, setPage] = useState(0);
+  const { data, isLoading } = use{{pascalCase name}}s({ page, size: PAGE_SIZE });
+
+  const [editing, setEditing] = useState<{{pascalCase name}}Response | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const formModal = useOverlayState({ onOpenChange: (open) => !open && setEditing(null) });
+
+  const [deleteTarget, setDeleteTarget] = useState<{{pascalCase name}}Response | null>(null);
+  const deleteDialog = useOverlayState({ onOpenChange: (open) => !open && setDeleteTarget(null) });
+
+  const create{{pascalCase name}} = useCreate{{pascalCase name}}();
+  const update{{pascalCase name}} = useUpdate{{pascalCase name}}(editing?.id ?? -1);
+  const delete{{pascalCase name}} = useDelete{{pascalCase name}}();
+
+  function openCreate() {
+    setIsCreating(true);
+    setEditing(null);
+    formModal.open();
+  }
+
+  function openEdit(row: {{pascalCase name}}Response) {
+    setIsCreating(false);
+    setEditing(row);
+    formModal.open();
+  }
+
+  function handleSubmit(values: {{pascalCase name}}FormValues) {
+    const mutation = isCreating ? create{{pascalCase name}} : update{{pascalCase name}};
+    mutation.mutate(values, {
+      onSuccess: () => {
+        toast.success(isCreating ? '{{pascalCase name}} created' : '{{pascalCase name}} updated');
+        formModal.close();
+      },
+      onError: (err) => showActionError(err, 'Something went wrong'),
+    });
+  }
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    delete{{pascalCase name}}.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success('{{pascalCase name}} deleted');
+        deleteDialog.close();
+      },
+      onError: (err) => showActionError(err, 'Something went wrong'),
+    });
+  }
+
+  // TODO: replace with the real columns for {{name}}
+  const columns: DataTableColumn<{{pascalCase name}}Response>[] = [
+    { key: 'name', header: 'Name', render: (row) => row.name },
+    ...(canEdit
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            render: (row: {{pascalCase name}}Response) => (
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="ghost" onPress={() => openEdit(row)}>
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onPress={() => {
+                    setDeleteTarget(row);
+                    deleteDialog.open();
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            ),
+          } satisfies DataTableColumn<{{pascalCase name}}Response>,
+        ]
+      : []),
+  ];
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{{pascalCase name}}s</h1>
+        </div>
+        {canEdit && <Button onPress={openCreate}>New {{pascalCase name}}</Button>}
+      </div>
+
+      <DataTable
+        aria-label="{{pascalCase name}}s"
+        columns={columns}
+        rows={data?.content ?? []}
+        isLoading={isLoading}
+        page={data?.page ?? 0}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements ?? 0}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+        emptyMessage="No results found."
+      />
+
+      <Modal.Backdrop isOpen={formModal.isOpen} onOpenChange={formModal.setOpen}>
+        <Modal.Container size="lg">
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>{isCreating ? 'New {{pascalCase name}}' : 'Edit {{pascalCase name}}'}</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <{{pascalCase name}}Form
+                key={editing?.id ?? 'new'}
+                defaultValues={editing ?? undefined}
+                onSubmit={handleSubmit}
+                onCancel={formModal.close}
+                isSubmitting={create{{pascalCase name}}.isPending || update{{pascalCase name}}.isPending}
+                serverError={create{{pascalCase name}}.error ?? update{{pascalCase name}}.error}
+              />
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+
+      <ConfirmDeleteDialog
+        isOpen={deleteDialog.isOpen}
+        onOpenChange={deleteDialog.setOpen}
+        title="Delete {{name}}?"
+        description="This will permanently delete this record."
+        onConfirm={handleDelete}
+        isPending={delete{{pascalCase name}}.isPending}
+      />
+    </div>
+  );
+}
