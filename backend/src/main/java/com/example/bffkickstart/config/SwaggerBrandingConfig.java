@@ -7,6 +7,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springdoc.webmvc.ui.SwaggerIndexPageTransformer;
 import org.springdoc.webmvc.ui.SwaggerIndexTransformer;
 import org.springdoc.webmvc.ui.SwaggerWelcomeCommon;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -31,6 +32,11 @@ import java.util.Base64;
  * instead). We delegate to springdoc's own transformer first (for the URL/CSRF/config
  * injection it already does) and only then splice our own header markup in, so a springdoc
  * version bump doesn't require touching this again unless the index page's structure changes.
+ * <p>
+ * Gated behind the same {@code springdoc.swagger-ui.enabled} property springdoc itself uses -
+ * when it's {@code false}, springdoc never registers {@link SwaggerUiConfigProperties} either,
+ * so an unconditional {@code @Bean} here would fail to start the whole app looking for a
+ * dependency that was never going to exist.
  */
 @Configuration
 public class SwaggerBrandingConfig {
@@ -38,6 +44,7 @@ public class SwaggerBrandingConfig {
     private static final String GIZMO_FOREST = "#0B3D2E";
 
     @Bean
+    @ConditionalOnProperty(name = "springdoc.swagger-ui.enabled", havingValue = "true")
     public SwaggerIndexTransformer swaggerIndexTransformer(SwaggerUiConfigProperties swaggerUiConfig,
                                                              SwaggerUiOAuthProperties swaggerUiOAuthProperties,
                                                              SwaggerWelcomeCommon swaggerWelcomeCommon,

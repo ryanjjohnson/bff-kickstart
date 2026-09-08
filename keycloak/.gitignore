@@ -1,0 +1,3 @@
+# Downloaded/extracted by scripts/run-keycloak-native.sh - see its comment for why this
+# isn't fetched via Docker here. Never committed; each dev's copy is their own.
+.dist/

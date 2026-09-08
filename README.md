@@ -79,7 +79,7 @@ docker compose up --build
 
 Demo users (password `password` for all): `admin` (all roles), `inspector` (Inspector + Viewer), `viewer` (read-only), `manager` (Viewer + Data Manager). These sign in exactly as before - the new self-registration path (below) is additive and doesn't touch them.
 
-## Local development (hot reload)
+## Local development (hot reload, infra still in Docker)
 
 Run infrastructure in Docker, but the frontend and backend directly on your machine:
 
@@ -101,6 +101,54 @@ cd frontend
 npm install
 npm run dev   # http://localhost:5173/bff-kickstart/, proxies /bff-kickstart/{api,oauth2,login,logout} to :8081
 ```
+
+## Running without Docker
+
+Everything above also runs with **no Docker at all** - useful if it's simply not installed, or your
+org's policy doesn't allow it. Nothing here changes the Docker path above; both are fully
+supported side by side, and the same running-app experience results either way.
+
+The one piece with no simple native equivalent is Keycloak itself, so
+[`scripts/run-keycloak-native.sh`](scripts/run-keycloak-native.sh) handles it: it downloads the
+official Keycloak distribution once (cached in `keycloak/.dist/`, gitignored), copies in this
+repo's theme/registration SPI/realm export - the same three things `keycloak/Dockerfile` bakes into
+the image - and starts it in dev mode on `:8080` against its own embedded dev database, no Postgres
+needed for this piece at all. Everything else has a normal native path:
+
+| Piece | Docker service | Native equivalent |
+|---|---|---|
+| Identity (Keycloak) | `keycloak` | `./scripts/run-keycloak-native.sh` |
+| Mail (SMTP demo) | `mailhog` | [Mailpit](https://mailpit.axllent.org/) (`brew install mailpit && mailpit`) - a maintained, wire-compatible Mailhog replacement (Mailhog itself is unmaintained), same default ports (1025 SMTP, 8025 web UI) |
+| Backend | `backend` | `cd backend && mvn spring-boot:run` |
+| Frontend (dev, hot reload) | `frontend` | `cd frontend && npm install && npm run dev` |
+| Frontend (production-style build, no nginx) | `frontend` | `cd frontend && npm run build && npm run preview` |
+
+Add **both** aliases to `/etc/hosts` (only `keycloak` is needed for the Docker path above - `mailhog`
+is only for this native one, since it's server-to-server: the backend and Keycloak's own
+"forgot password" email both send through it, and neither is browser-facing):
+
+```
+127.0.0.1 keycloak
+127.0.0.1 mailhog
+```
+
+With those in place, the backend's default `KEYCLOAK_*_URI`/`SMTP_HOST` values (already pointed at
+`keycloak`/`mailhog`, `application.properties`) work completely unmodified - they don't know or
+care whether the thing answering at those hostnames is a container or a native process on the same
+machine. Bring it up in whatever order:
+
+```bash
+./scripts/run-keycloak-native.sh   # first run downloads Keycloak; leave running in its own terminal
+brew install mailpit && mailpit    # leave running in its own terminal
+cd backend && mvn spring-boot:run  # leave running in its own terminal
+cd frontend && npm install && npm run dev
+```
+
+The only code-level difference from the Docker path: `vite preview` (used by the "production-style
+build" row above) needed its own copy of the dev server's backend-proxying config
+(`frontend/vite.config.ts`'s `preview.proxy`) - without it, a built-and-previewed frontend had
+nothing to rewrite `/bff-kickstart/api/**` onto, since that rewriting is normally nginx's job
+(`nginx.conf.template`) in the Docker path, and `vite preview` doesn't run nginx.
 
 ## Security architecture
 
@@ -259,3 +307,114 @@ Every form validates on both sides:
 ## Reports
 
 `GET /bff-kickstart/api/v1/reports/compliance` returns the compliance report as JSON (used for the in-app preview); `/csv` and `/pdf` return downloadable files built from the same data (`backend/.../service/ReportService.java`).
+
+## Why these technologies, specifically
+
+Every stack has competing options at every layer. These are the ones this template picked, and the
+actual reasoning - including where the runner-up would also have been fine, which is most of the
+time. None of this is "X is bad" - it's "X wasn't the better fit for a starter template meant to be
+forked by teams with unpredictable size, skill mix, and infrastructure constraints."
+
+**Axios over the native `fetch` API.** This is the one place fighting the platform default actually
+paid for itself, because the BFF pattern leans on two things `fetch` doesn't give you for free:
+
+- **Interceptors.** `src/lib/api-client.ts`'s response interceptor is what makes a revoked session
+  show up instantly on whatever page the user happens to be on - it fires on *any* `401` from *any*
+  call, mutation or query, and flips the app to signed-out state without every feature needing its
+  own error-handling code for that case (see `frontend/README.md`'s "Staying signed out when
+  gizmoshop SSO says so"). Reproducing this with `fetch` means either wrapping every single call in
+  a shared helper by hand, or writing your own `fetch` monkey-patch - at which point you've built a
+  worse version of what axios already ships.
+- **`xsrfCookieName`/`xsrfHeaderName`.** Axios reads the `XSRF-TOKEN` cookie and attaches it as
+  `X-XSRF-TOKEN` on every request automatically - this is the actual mechanism the CSRF protection
+  in `SecurityConfig` depends on client-side (see the root README's CSRF section). `fetch` has no
+  equivalent; you'd hand-read `document.cookie` and set the header yourself, on every call site, and
+  get it wrong once eventually.
+- **Rejects on non-2xx.** `fetch` only rejects on network failure - a 500 is a "successful" fetch you
+  have to manually check `response.ok` on. Axios throwing means the interceptor above and every
+  call site's error handling both work the way you'd naively expect.
+
+The cost: a dependency, and a slightly larger bundle than zero-`fetch`. For an app whose entire
+security model runs through those interceptors, that's not a close call.
+
+**TanStack Query over Redux Toolkit Query, SWR, or hand-rolled `useEffect`.** This app has no
+client-only state worth a global store - everything the UI shows either came from the API or is
+form-local - so Redux (Toolkit Query included) would mean adopting store/slice ceremony purely to
+get a data-fetching layer, when a data-fetching layer is all that's actually needed. TanStack
+Query's query-key invalidation model (`queryClient.invalidateQueries(['facilities'])` after a
+mutation) maps directly onto this app's one-feature-per-resource structure - each feature's
+`hooks/` module owns its own key. SWR is a genuinely comparable alternative here; TanStack Query
+won on its devtools and a slightly richer mutation API, not a fundamental difference.
+
+**HeroUI over MUI, Ant Design, Chakra, or shadcn/ui.** MUI's Material Design language and Ant
+Design's own design system both carry a strong visual identity that fights a from-scratch brand
+(exactly the DEP-blue-then-gizmo-green situation this template has actually been through - see
+`docs/theme-blue.patch`); HeroUI's components are accessible and unstyled enough to take brand
+colors directly through Tailwind tokens without a fight. shadcn/ui is a real alternative worth
+naming specifically: it isn't a dependency at all, it's components you copy into your own repo and
+own outright - more ultimate control, at the cost of manually re-copying upstream fixes forever
+instead of bumping a version number. For a template meant to be forked repeatedly, "upgrade is a
+version bump" mattered more than maximum control.
+
+**Tailwind CSS over CSS Modules or styled-components/emotion.** Utility classes stay colocated with
+the component that uses them - no parallel `.module.css` file to keep in sync, no CSS-in-JS runtime
+cost on every render. The tradeoff is real: class-heavy JSX is denser to read than a clean external
+stylesheet, and Tailwind's own learning curve isn't nothing. It's a bet that "one file per
+component instead of two" and "the brand palette lives in one `:root` block" (`index.css`) both
+outweigh that density, especially for a template whose whole point is being cloned and re-themed.
+
+**Zod + react-hook-form over Yup + Formik.** Zod's `z.infer<typeof schema>` derives the TypeScript
+type directly from the validation schema - one source of truth, not a schema plus a hand-maintained
+matching interface. Yup predates good TypeScript inference and needs the latter. react-hook-form's
+uncontrolled-input model means typing in one field doesn't re-render the rest of the form; Formik's
+older controlled-component default does, which shows on longer forms (this app's registration form,
+for one).
+
+**oxlint over ESLint - the one place speed was explicitly chosen over completeness.** oxlint (Rust,
+from the Oxc project) lints in a fraction of ESLint's time, but it's a genuinely smaller rule set -
+`frontend/README.md`'s own feature-boundary rule ("a feature may only be imported through its
+`index.ts`") calls out that oxlint has no equivalent of ESLint's `import/no-restricted-paths`, so
+that rule is enforced by convention and code review, not tooling, here. A team that wants that rule
+machine-enforced should expect to swap in ESLint (or add it alongside) - that's an explicit,
+documented tradeoff, not an oversight.
+
+**Spring Boot over Micronaut, Quarkus, or a non-JVM backend (Node/Express, Django).** The entire BFF
+pattern rides on `spring-boot-starter-oauth2-client`'s `SecurityFilterChain` composition - Spring
+Security's OAuth2 support is the most battle-tested implementation of this exact pattern in the JVM
+world, and this app's dual-mechanism filter chain (session BFF + optional Bearer resource server,
+see "Security architecture" above) leans on primitives (`OidcSessionRegistry`,
+`BearerTokenAuthenticationFilter`, `ForwardedHeaderFilter`) that Micronaut/Quarkus have their own
+comparable-but-less-traveled equivalents of. Micronaut/Quarkus's real advantage - faster
+startup, lower memory, better for scale-to-zero/serverless - matters more for a fleet of
+short-lived functions than a normal always-on internal tool. Node/Express or Django were never
+serious contenders for the same reason many agencies standardize on the JVM in the first place:
+existing operational tooling, existing team skills, one fewer runtime to patch and monitor.
+
+**Hibernate/JPA over jOOQ or plain JDBC.** Spring Data JPA makes a new CRUD feature nearly
+boilerplate-free - an entity, a repository interface, done - matching this template's own
+`npm run generate`-style philosophy of minimizing what a new feature costs to add. jOOQ's compiled,
+type-safe SQL builder is a genuinely better fit once queries get complex enough that JPQL/Criteria
+fights you, but it adds a codegen step and a steeper learning curve than most people extending a
+starter template will want on day one.
+
+**Flyway over Liquibase.** Plain, ordered `V1__init.sql`-style SQL files are directly readable and
+directly runnable outside the migration tool if you ever need to - Liquibase's XML/YAML/JSON
+changelog abstraction buys database-vendor portability and scriptable rollbacks, neither of which
+this template needs (it targets one vendor's dialect - see `application.properties`'s `MODE=Oracle`
+comment).
+
+**OpenPDF over iText or Apache PDFBox.** The deciding factor here is licensing, not API ergonomics:
+modern iText (7+) is AGPL or commercial-licensed, which doesn't sit well next to a template meant to
+be given away under CC0. OpenPDF is a permissively-licensed (LGPL/MPL) fork of the last
+open iText version, so the `Document`/`PdfPTable` API (`ReportService.java`) is exactly what most
+Java developers already know from old iText tutorials. PDFBox is a solid Apache-2.0 alternative
+too; OpenPDF's API is just the more familiar one for the same permissive-license price.
+
+**Keycloak over Auth0, Okta, or a homegrown identity service.** Auth0 and Okta both charge per
+monthly active user past a free tier - a real budget line for a government agency, and a strange
+thing to require of software being given away for free. Keycloak is open source, self-hostable, and
+has mature OIDC support with an admin console for realm/role/user management - no SaaS account
+needed to run the whole stack, including this template's own local dev/demo realm. A homegrown
+identity service was never on the table: the entire point of the BFF pattern (see "Security
+architecture" above) is *not* reinventing authentication, and that logic applies just as much to
+the identity provider itself as to the app in front of it.
