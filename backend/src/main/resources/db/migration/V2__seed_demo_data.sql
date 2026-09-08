@@ -3,7 +3,14 @@ insert into facility (name, facility_type, address_line1, city, state, zip, acti
     ('Precision Gizmo Fabrication', 'FABRICATION', '450 Foundry Rd', 'Rivertown', 'OH', '45610', true),
     ('QualityFirst Inspection Lab', 'QUALITY_CONTROL', '77 Testing Ave', 'Millbrook', 'OH', '45505', true),
     ('Bolt & Gear Co-op', 'PACKAGING', '900 Component Blvd', 'Lakeview', 'OH', '45620', true),
-    ('Harborview Gizmo Exports', 'OTHER', '12 Dock St', 'Portside', 'OH', '45630', false);
+    ('Harborview Gizmo Exports', 'OTHER', '12 Dock St', 'Portside', 'OH', '45630', false),
+    ('Ironclad Fasteners Inc.', 'FABRICATION', '215 Forge St', 'Dayton Heights', 'OH', '45402', true),
+    ('Summit Gizmo Assembly', 'ASSEMBLY', '640 Ridgeline Dr', 'Hilltown', 'OH', '45640', true),
+    ('Crestline Packaging Solutions', 'PACKAGING', '58 Carton Way', 'Crestline', 'OH', '44827', true),
+    ('Northgate Quality Labs', 'QUALITY_CONTROL', '303 Precision Pkwy', 'Northgate', 'OH', '43201', true),
+    ('Riverside Component Works', 'FABRICATION', '19 Millrace Rd', 'Riverside', 'OH', '45414', true),
+    ('Eastbrook Gizmo Assembly', 'ASSEMBLY', '742 Brookline Ave', 'Eastbrook', 'OH', '44305', true),
+    ('Union Yard Exports', 'OTHER', '4 Rail Yard Ct', 'Union Yard', 'OH', '43701', false);
 
 insert into permit (facility_id, permit_number, permit_type, status, description, issued_date, expiration_date) values
     (1, 'SAFETY-2024-00123', 'SAFETY', 'ISSUED', 'Machine guarding & safety permit for assembly line', '2024-01-15', '2027-01-15'),
@@ -11,7 +18,17 @@ insert into permit (facility_id, permit_number, permit_type, status, description
     (2, 'ELECTRICAL-2024-00456', 'ELECTRICAL', 'ISSUED', 'Electrical systems permit for fabrication equipment', '2024-03-01', '2026-11-30'),
     (3, 'QUALITY-2024-00789', 'QUALITY', 'PENDING_REVIEW', 'Quality control lab certification renewal', null, null),
     (4, 'PACKAGING-2022-00321', 'PACKAGING', 'ISSUED', 'Packaging line operating permit', '2022-05-10', '2025-10-01'),
-    (5, 'EXPORT-2021-00111', 'EXPORT', 'REVOKED', 'Export shipping permit (revoked for violations)', '2021-02-01', '2024-02-01');
+    (5, 'EXPORT-2021-00111', 'EXPORT', 'REVOKED', 'Export shipping permit (revoked for violations)', '2021-02-01', '2024-02-01'),
+    (6, 'SAFETY-2023-00234', 'SAFETY', 'ISSUED', 'Machine guarding permit for fastener presses', '2023-04-01', '2026-04-01'),
+    (6, 'QUALITY-2024-00555', 'QUALITY', 'ISSUED', 'Fastener quality certification', '2024-02-01', '2027-02-01'),
+    (7, 'SAFETY-2022-00678', 'SAFETY', 'EXPIRED', 'Assembly line safety permit', '2019-08-01', '2022-08-01'),
+    (7, 'ELECTRICAL-2025-00099', 'ELECTRICAL', 'ISSUED', 'Electrical upgrade permit for new assembly line', '2025-01-10', '2028-01-10'),
+    (8, 'PACKAGING-2023-00456', 'PACKAGING', 'ISSUED', 'Packaging line expansion permit', '2023-06-15', '2026-06-15'),
+    (8, 'QUALITY-2021-00321', 'QUALITY', 'DRAFT', 'Draft quality certification pending submission', null, null),
+    (9, 'QUALITY-2024-00888', 'QUALITY', 'ISSUED', 'Testing lab annual certification', '2024-05-01', '2027-05-01'),
+    (10, 'ELECTRICAL-2022-00765', 'ELECTRICAL', 'PENDING_REVIEW', 'Electrical permit renewal under review', null, null),
+    (11, 'SAFETY-2025-00111', 'SAFETY', 'ISSUED', 'New assembly facility safety permit', '2025-03-01', '2028-03-01'),
+    (12, 'EXPORT-2020-00045', 'EXPORT', 'EXPIRED', 'Export permit for overseas shipments', '2018-01-01', '2021-01-01');
 
 insert into inspection (facility_id, permit_id, inspector_name, scheduled_date, completed_date, outcome, notes) values
     (1, 1, 'Ivan Inspector', '2024-02-01', '2024-02-01', 'PASSED', 'Machine guarding checks within safety limits.'),
@@ -19,4 +36,14 @@ insert into inspection (facility_id, permit_id, inspector_name, scheduled_date, 
     (2, 3, 'Ivan Inspector', '2024-09-01', '2024-09-02', 'PASSED', 'Electrical inspection within permitted parameters.'),
     (3, 4, 'Ivan Inspector', '2026-10-01', null, 'PENDING', 'Awaiting certification renewal decision before inspection.'),
     (4, 5, 'Ivan Inspector', '2025-01-20', '2025-01-22', 'NEEDS_FOLLOWUP', 'Minor packaging line issue, re-inspect in 90 days.'),
-    (5, 6, 'Ivan Inspector', '2024-01-10', '2024-01-10', 'FAILED', 'Unauthorized export shipment observed; permit revoked.');
+    (5, 6, 'Ivan Inspector', '2024-01-10', '2024-01-10', 'FAILED', 'Unauthorized export shipment observed; permit revoked.'),
+    (6, 7, 'Ivan Inspector', '2023-05-01', '2023-05-01', 'PASSED', 'Fastener press guarding verified compliant.'),
+    (6, 8, 'Ivan Inspector', '2024-03-01', '2024-03-01', 'PASSED', 'Fastener quality controls verified.'),
+    (7, 9, 'Ivan Inspector', '2022-09-10', '2022-09-10', 'FAILED', 'Expired safety permit found during audit.'),
+    (7, 10, 'Ivan Inspector', '2026-11-15', null, 'PENDING', 'Awaiting completion of electrical upgrade before inspection.'),
+    (8, 11, 'Ivan Inspector', '2023-07-01', '2023-07-01', 'PASSED', 'Packaging line expansion meets code.'),
+    (8, 12, 'Ivan Inspector', '2026-12-01', null, 'PENDING', 'Draft permit; inspection scheduled pending submission.'),
+    (9, 13, 'Ivan Inspector', '2024-06-01', '2024-06-01', 'PASSED', 'Testing lab equipment calibration verified.'),
+    (10, 14, 'Ivan Inspector', '2026-10-15', null, 'PENDING', 'Awaiting electrical permit renewal decision.'),
+    (11, 15, 'Ivan Inspector', '2025-04-01', '2025-04-01', 'PASSED', 'New facility safety walkthrough completed.'),
+    (12, 16, 'Ivan Inspector', '2021-02-01', '2021-02-01', 'FAILED', 'Expired export permit found; shipment held.');
