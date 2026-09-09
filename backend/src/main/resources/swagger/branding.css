@@ -1,0 +1,16 @@
+/* Injected into swagger-ui's index.html by SwaggerBrandingConfig - hides the stock topbar
+   and styles the replacement header (branding-header.html). */
+.swagger-ui .topbar { display: none; }
+#bff-kickstart-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #0B3D2E;
+  color: #ffffff;
+  padding: 10px 24px;
+  font-family: 'Roboto Condensed', 'Segoe UI', Helvetica, Arial, sans-serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+#bff-kickstart-header img { height: 40px; width: 40px; }
+#bff-kickstart-header .bff-kickstart-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+#bff-kickstart-header .bff-kickstart-subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.75); }

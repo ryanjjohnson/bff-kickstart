@@ -30,8 +30,12 @@ import java.util.Base64;
  * extension point for customizing the served swagger-ui index page (there's no
  * {@code springdoc.swagger-ui.custom-css} property in this springdoc version to reach for
  * instead). We delegate to springdoc's own transformer first (for the URL/CSRF/config
- * injection it already does) and only then splice our own header markup in, so a springdoc
+ * injection it already does) and only then splice our own branding in, so a springdoc
  * version bump doesn't require touching this again unless the index page's structure changes.
+ * <p>
+ * The branding itself lives under {@code src/main/resources/swagger/} - {@code branding.css}
+ * and {@code branding-header.html} - not in Java string literals; this class only loads those
+ * files and splices them in at the right anchors.
  * <p>
  * Gated behind the same {@code springdoc.swagger-ui.enabled} property springdoc itself uses -
  * when it's {@code false}, springdoc never registers {@link SwaggerUiConfigProperties} either,
@@ -41,7 +45,7 @@ import java.util.Base64;
 @Configuration
 public class SwaggerBrandingConfig {
 
-    private static final String GIZMO_FOREST = "#0B3D2E";
+    private static final String PAGE_TITLE = "BFF Kickstart - API Docs";
 
     @Bean
     @ConditionalOnProperty(name = "springdoc.swagger-ui.enabled", havingValue = "true")
@@ -50,9 +54,17 @@ public class SwaggerBrandingConfig {
                                                              SwaggerWelcomeCommon swaggerWelcomeCommon,
                                                              ObjectMapperProvider objectMapperProvider) throws IOException {
         String logoDataUri = loadLogoAsDataUri();
+        String styleBlock = "<style>\n" + loadResource("swagger/branding.css") + "</style>\n";
+        String headerBlock = loadResource("swagger/branding-header.html").replace("{{logo}}", logoDataUri);
         SwaggerIndexPageTransformer delegate =
                 new SwaggerIndexPageTransformer(swaggerUiConfig, swaggerUiOAuthProperties, swaggerWelcomeCommon, objectMapperProvider);
-        return new GizmoBrandedSwaggerIndexTransformer(delegate, logoDataUri);
+        return new GizmoBrandedSwaggerIndexTransformer(delegate, styleBlock, headerBlock, logoDataUri);
+    }
+
+    private static String loadResource(String path) throws IOException {
+        try (InputStream in = new ClassPathResource(path).getInputStream()) {
+            return StreamUtils.copyToString(in, StandardCharsets.UTF_8);
+        }
     }
 
     private static String loadLogoAsDataUri() throws IOException {
@@ -67,6 +79,8 @@ public class SwaggerBrandingConfig {
      * exactly as springdoc's own transformer produced it.
      */
     private record GizmoBrandedSwaggerIndexTransformer(SwaggerIndexPageTransformer delegate,
+                                                         String styleBlock,
+                                                         String headerBlock,
                                                          String logoDataUri) implements SwaggerIndexTransformer {
 
         @Override
@@ -82,35 +96,10 @@ public class SwaggerBrandingConfig {
         }
 
         private String brand(String html) {
-            String style = """
-                    <style>
-                      .swagger-ui .topbar { display: none; }
-                      #bff-kickstart-header {
-                        display: flex;
-                        align-items: center;
-                        gap: 12px;
-                        background-color: %s;
-                        color: #ffffff;
-                        padding: 10px 24px;
-                        font-family: 'Roboto Condensed', 'Segoe UI', Helvetica, Arial, sans-serif;
-                        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-                      }
-                      #bff-kickstart-header img { height: 40px; width: 40px; }
-                      #bff-kickstart-header .bff-kickstart-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
-                      #bff-kickstart-header .bff-kickstart-subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.75); }
-                    </style>
-                    """.formatted(GIZMO_FOREST);
-            String header = """
-                    <div id="bff-kickstart-header">
-                      <img src="%s" alt="gizmoshop" />
-                      <span class="bff-kickstart-title">BFF Kickstart</span>
-                      <span class="bff-kickstart-subtitle">API Docs</span>
-                    </div>
-                    """.formatted(logoDataUri);
             return html
-                    .replace("</head>", style + "</head>")
-                    .replace("<div id=\"swagger-ui\"></div>", header + "<div id=\"swagger-ui\"></div>")
-                    .replace("<title>Swagger UI</title>", "<title>BFF Kickstart - API Docs</title>")
+                    .replace("</head>", styleBlock + "</head>")
+                    .replace("<div id=\"swagger-ui\"></div>", headerBlock + "<div id=\"swagger-ui\"></div>")
+                    .replace("<title>Swagger UI</title>", "<title>" + PAGE_TITLE + "</title>")
                     .replace("href=\"./favicon-32x32.png\"", "href=\"" + logoDataUri + "\"")
                     .replace("href=\"./favicon-16x16.png\"", "href=\"" + logoDataUri + "\"");
         }
