@@ -8,6 +8,7 @@ actual need:
 
 | Doc | Audience | What it answers |
 |---|---|---|
+| [Architecture overview deck](BFF-Architecture-Overview.pptx) | Developers & technical leads, presentation form | Fifteen slides on how the BFF pattern works here - login flow, CSRF, roles, revocation, topology, trade-offs - with speaker notes |
 | [02 - Adding a secure feature](02-adding-a-secure-feature.md) | Mid-level Java/React developers building on top of this app | The checklist for adding a new resource end-to-end without leaving a hole in it |
 | [03 - Full reference](03-full-reference.md) | Senior developers, whoever owns this app's security posture long-term | Threat model, production hardening, extending the auth setup, a real incident this app already had |
 
