@@ -152,7 +152,7 @@ nothing to rewrite `/bff-kickstart/api/**` onto, since that rewriting is normall
 
 ## Security architecture
 
-The backend runs **two OAuth2 authentication mechanisms side by side, in a single `SecurityFilterChain`** (`backend/.../config/SecurityConfig.java`):
+The backend runs **two OAuth2 authentication mechanisms side by side, in a single `SecurityFilterChain`** (`backend/.../configurations/SecurityConfig.java`):
 
 1. **OAuth2 Client** (a backend-for-frontend / BFF) - always on. The browser holds a session cookie; the backend holds the actual OIDC tokens and talks to gizmoshop SSO on the browser's behalf. This is what the SPA uses.
 2. **OAuth2 Resource Server** - opt-in via `API_EXPOSED` (see below). Lets *other* API clients - machine-to-machine callers with no browser, no session, no cookie - authenticate by presenting an `Authorization: Bearer <JWT>` header directly, typically obtained via gizmoshop SSO's `client_credentials` grant.
@@ -249,7 +249,7 @@ Both the backend app and the local gizmoshop SSO stand-in send email through **M
 
 The local stand-in's own realm SMTP settings (`keycloak/realm-export/gizmoshop-realm.json`'s `smtpServer` block, used for things like the "Forgot Password" email) point at the same `mailhog:1025` - hardcoded there rather than reading these env vars, since Keycloak's realm-import doesn't resolve `${env.VAR}`-style placeholders inside `smtpServer` (verified empirically; it silently imports the literal placeholder text instead). The values are identical to `SMTP_HOST`/`SMTP_PORT`'s own defaults, so in practice both send through the same place.
 
-Any signed-in user, regardless of role, can send a test email from the home page's **"Send Email"** button - recipient, subject, and message, sent from `noreply@gizmoshop.example` with the gizmoshop logo embedded (`backend/.../service/MailService.java`, `POST /api/v1/emails`). Mailhog's own message preview doesn't render inline (`cid:`) images, so the logo shows as a broken-image icon there even though it's correctly embedded - check the message's "MIME" tab to confirm the `multipart/related` structure instead.
+Any signed-in user, regardless of role, can send a test email from the home page's **"Send Email"** button - recipient, subject, and message, sent from `noreply@gizmoshop.example` with the gizmoshop logo embedded (`backend/.../services/MailService.java`, `POST /api/v1/emails`). Mailhog's own message preview doesn't render inline (`cid:`) images, so the logo shows as a broken-image icon there even though it's correctly embedded - check the message's "MIME" tab to confirm the `multipart/related` structure instead.
 
 ## Roles
 
@@ -302,11 +302,11 @@ This scaffolds `src/types/<entity>.ts` and `src/features/<resource>/{api.ts, <En
 Every form validates on both sides:
 
 - **Client**: `zod` schemas in `frontend/src/types/*.ts`, wired into forms via `react-hook-form` + `@hookform/resolvers`
-- **Server**: Jakarta Bean Validation annotations on the request DTOs in `backend/.../dto/*Request.java`, enforced regardless of what the client sends
+- **Server**: Jakarta Bean Validation annotations on the request DTOs in `backend/.../dtos/*Request.java`, enforced regardless of what the client sends
 
 ## Reports
 
-`GET /bff-kickstart/api/v1/reports/compliance` returns the compliance report as JSON (used for the in-app preview); `/csv` and `/pdf` return downloadable files built from the same data (`backend/.../service/ReportService.java`).
+`GET /bff-kickstart/api/v1/reports/compliance` returns the compliance report as JSON (used for the in-app preview); `/csv` and `/pdf` return downloadable files built from the same data (`backend/.../services/ReportService.java`).
 
 ## Why these technologies, specifically
 
