@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig, loadEnv, type ProxyOptions } from 'vite'
 // Default-imported with an import attribute (rather than a named import)
 // because tsconfig's NodeNext module mode requires both for JSON modules.
@@ -64,7 +65,48 @@ export default defineConfig(({ mode }) => {
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
     },
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      // Installability (add-to-homescreen on iOS/Android, standalone window),
+      // deliberately NOT offline data: the app is session-cookie + live-API
+      // driven, so the service worker precaches only the built static assets.
+      // Auth and API traffic must never be served from a cache.
+      VitePWA({
+        registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        manifest: {
+          name: 'BFF Kickstart',
+          short_name: 'BFF Kickstart',
+          description: 'Gizmo-manufacturing inspection and reporting',
+          start_url: `${frontendBasePath}/`,
+          scope: `${frontendBasePath}/`,
+          display: 'standalone',
+          theme_color: '#0F6A44',
+          background_color: '#ffffff',
+          icons: [
+            { src: 'pwa-icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'pwa-icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          ],
+        },
+        workbox: {
+          // SPA fallback for client-side routes only - every backend-owned
+          // path (see backendProxy above) must reach the network, never the
+          // cached index.html. A cached response to an OAuth2 redirect or an
+          // /api call is the classic PWA-breaks-auth failure mode.
+          navigateFallback: `${frontendBasePath}/index.html`,
+          navigateFallbackDenylist: [
+            /\/api\//,
+            /\/oauth2\//,
+            /\/login(\/|$)/,
+            /\/logout(\/|$)/,
+            /\/swagger-ui/,
+            /\/v3\/api-docs/,
+          ],
+        },
+      }),
+    ],
     server: {
       port: 5173,
       proxy: backendProxy,

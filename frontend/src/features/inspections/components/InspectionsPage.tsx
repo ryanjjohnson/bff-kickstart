@@ -17,6 +17,7 @@ import {
 } from '../types/inspection';
 import { exportInspectionsCsv, importInspectionsCsv } from '../api/inspections';
 import { useCreateInspection, useDeleteInspection, useInspections, useUpdateInspection } from '../hooks/useInspections';
+import { InspectionAttachments } from './InspectionAttachments';
 import { InspectionForm } from './InspectionForm';
 
 const PAGE_SIZE = 10;
@@ -216,6 +217,15 @@ export function InspectionsPage() {
                 isSubmitting={createInspection.isPending || updateInspection.isPending}
                 serverError={createInspection.error ?? updateInspection.error}
               />
+              {editing ? (
+                <div className="mt-4">
+                  <InspectionAttachments inspectionId={editing.id} canEdit={canEdit} />
+                </div>
+              ) : (
+                <p className="mt-4 border-t border-default-200 pt-3 text-xs text-muted">
+                  Save the inspection first to add file or photo attachments.
+                </p>
+              )}
             </Modal.Body>
           </Modal.Dialog>
         </Modal.Container>

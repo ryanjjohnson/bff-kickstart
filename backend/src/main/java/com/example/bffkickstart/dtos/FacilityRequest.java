@@ -1,6 +1,14 @@
 package com.example.bffkickstart.dtos;
 
 import com.example.bffkickstart.models.FacilityType;
+import com.example.bffkickstart.models.LocationSource;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.PositiveOrZero;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -36,4 +44,40 @@ public class FacilityRequest {
     private String zip;
 
     private boolean active = true;
+
+    // --- Optional location. latitude/longitude are the editable pair; the rest is
+    // metadata captured by the device's Geolocation API when the fix was taken
+    // (cleared when coordinates are entered by hand - see FacilityService#apply). ---
+
+    @DecimalMin(value = "-90", message = "Latitude must be between -90 and 90")
+    @DecimalMax(value = "90", message = "Latitude must be between -90 and 90")
+    private BigDecimal latitude;
+
+    @DecimalMin(value = "-180", message = "Longitude must be between -180 and 180")
+    @DecimalMax(value = "180", message = "Longitude must be between -180 and 180")
+    private BigDecimal longitude;
+
+    @PositiveOrZero(message = "Accuracy must be zero or greater")
+    private Double locationAccuracyM;
+
+    private Double locationAltitudeM;
+
+    @PositiveOrZero(message = "Altitude accuracy must be zero or greater")
+    private Double locationAltitudeAccuracyM;
+
+    @DecimalMin(value = "0", message = "Heading must be between 0 and 360")
+    @DecimalMax(value = "360", message = "Heading must be between 0 and 360")
+    private Double locationHeadingDeg;
+
+    @PositiveOrZero(message = "Speed must be zero or greater")
+    private Double locationSpeedMps;
+
+    private Instant locationCapturedAt;
+
+    private LocationSource locationSource;
+
+    @AssertTrue(message = "Latitude and longitude must be provided together")
+    public boolean isCoordinatesPaired() {
+        return (latitude == null) == (longitude == null);
+    }
 }

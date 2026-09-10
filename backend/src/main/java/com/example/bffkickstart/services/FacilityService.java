@@ -109,6 +109,28 @@ public class FacilityService {
         facility.setState(request.getState().toUpperCase());
         facility.setZip(request.getZip());
         facility.setActive(request.isActive());
+        facility.setLatitude(request.getLatitude());
+        facility.setLongitude(request.getLongitude());
+        if (request.getLatitude() == null) {
+            // No coordinates, no metadata - never keep a stale fix for a cleared location.
+            facility.setLocationAccuracyM(null);
+            facility.setLocationAltitudeM(null);
+            facility.setLocationAltitudeAccuracyM(null);
+            facility.setLocationHeadingDeg(null);
+            facility.setLocationSpeedMps(null);
+            facility.setLocationCapturedAt(null);
+            facility.setLocationSource(null);
+        } else {
+            facility.setLocationAccuracyM(request.getLocationAccuracyM());
+            facility.setLocationAltitudeM(request.getLocationAltitudeM());
+            facility.setLocationAltitudeAccuracyM(request.getLocationAltitudeAccuracyM());
+            facility.setLocationHeadingDeg(request.getLocationHeadingDeg());
+            facility.setLocationSpeedMps(request.getLocationSpeedMps());
+            facility.setLocationCapturedAt(request.getLocationCapturedAt());
+            facility.setLocationSource(request.getLocationSource() != null
+                    ? request.getLocationSource()
+                    : com.example.bffkickstart.models.LocationSource.MANUAL);
+        }
     }
 
     @Transactional(readOnly = true)

@@ -308,6 +308,33 @@ Every form validates on both sides:
 
 `GET /bff-kickstart/api/v1/reports/compliance` returns the compliance report as JSON (used for the in-app preview); `/csv` and `/pdf` return downloadable files built from the same data (`backend/.../services/ReportService.java`).
 
+## Installable as an app (PWA)
+
+The frontend ships a web app manifest and a minimal service worker (vite-plugin-pwa), so the
+running app can be added to an iOS/Android homescreen - or installed from a desktop browser's
+address bar - and opens in its own standalone window with the app icon and brand color.
+Deliberately *not* an offline app: everything rides on the session cookie and live API, so the
+service worker precaches only the built static assets, and its SPA navigation fallback
+explicitly denylists every backend-owned path (`/api`, `/oauth2`, `/login`, `/logout`, Swagger) -
+a cached response to an auth redirect is the classic PWA-breaks-login failure mode. Requires
+HTTPS in production (localhost is exempt). Icons and manifest values live in
+`frontend/vite.config.ts`; changing them means a rebuild.
+
+## Inspection attachments & facility location
+
+Each saved inspection accepts file attachments - **Add files** for anything, **Take photo** to
+open the camera directly on phones/tablets (a capture-hinted file input; desktop browsers fall
+back to a picker). Bytes are stored in the app database (`inspection_attachment`, 10MB multipart
+cap in `application.properties`); uploads record who and when, downloads force
+`Content-Disposition: attachment` + `nosniff`. Upload/delete follows the inspection edit roles
+(Admin/Inspector); anyone who can view inspections can download.
+
+Facilities carry an optional latitude/longitude pair - editable text inputs on the new/edit
+form, plus a **Use my location** button that fills them from the browser's Geolocation API and
+records everything the device reported alongside (accuracy radius, altitude, heading, speed,
+capture timestamp, and whether the fix was DEVICE or MANUAL - hand-editing a coordinate flips it
+to MANUAL and clears the stale device metadata, since it no longer describes that point).
+
 ## Why these technologies, specifically
 
 Every stack has competing options at every layer. These are the ones this template picked, and the
