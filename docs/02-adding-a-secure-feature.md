@@ -2,7 +2,7 @@
 
 *For developers building a new resource on top of BFF Kickstart. Assumes you're comfortable with
 Spring Boot and React, but new to how this app's auth setup interacts with them. If you just need
-the UI/API scaffolding steps (not the security side), `frontend/README.md`'s "Adding a new page
+the UI/API scaffolding steps (not the security side), `docs/frontend-guide.md`'s "Adding a new page
 with a CRUD form" already covers that in full - this doc is the security checklist that wraps
 around it.*
 
@@ -36,13 +36,13 @@ noticing now, not after you've half-implemented two different rules.
 ### Step 2 - does this need a new role?
 
 Check the existing four first (`Admin`, `Inspector`, `Viewer`, `Data Manager` - see the root
-README's [Roles](../README.md#roles) section) - reusing one is simpler to reason about than
+README's [Roles](full-guide.md#roles) section) - reusing one is simpler to reason about than
 adding a new one, and every new role is one more thing a future developer has to remember exists.
 Here, `Fleet Manager` is genuinely new, so it needs to exist in two places, for two different
 reasons:
 
 1. **The identity side - gizmoshop SSO.** This app doesn't run its own identity service (see the
-   root README's [Identity provider: gizmoshop SSO](../README.md#identity-provider-gizmoshop-sso))
+   root README's [Identity provider: gizmoshop SSO](full-guide.md#identity-provider-gizmoshop-sso))
    - `Fleet Manager` has to actually exist as a **client role** on this app's client in gizmoshop
    SSO's shared realm before anyone can be granted it. Two different situations:
    - **Just building/testing locally** against this repo's local gizmoshop SSO stand-in: add the
@@ -116,7 +116,7 @@ not a subsystem.
 cd frontend && npm run generate
 ```
 
-matching `frontend/README.md`'s existing walkthrough. The one addition specific to a
+matching `docs/frontend-guide.md`'s existing walkthrough. The one addition specific to a
 partially-restricted feature: gate the Create/Edit/Delete buttons on the new role, same as every
 existing form does for `Admin`:
 
@@ -129,7 +129,7 @@ const { hasRole } = useAuth();
 ```
 
 `useAuth().hasRole(...)` reads the roles `/api/v1/me` returned at login - see
-`frontend/README.md`'s [Security](../frontend/README.md#security) section for how that's wired up.
+`docs/frontend-guide.md`'s [Security](frontend-guide.md#security) section for how that's wired up.
 Get the role list wrong here and the worst that happens is a `Viewer` sees a button that 403s when
 clicked (annoying, not a vulnerability) or a `Fleet Manager` doesn't see a button they're actually
 allowed to use (a bug report, not a vulnerability) - because Step 3 is the actual gate. That
@@ -143,7 +143,7 @@ Before calling this done, sign in as at least: a role that should have full acce
 role in Step 2), and a role that should be read-only or blocked entirely (`Viewer`, or `Inspector`
 if vehicles are meant to be Admin/Fleet-Manager-only). Confirm the blocked case actually 403s from
 the backend directly, not just that the frontend hides the button - the root README's
-["Try it: calling the API as a machine client"](../README.md#try-it-calling-the-api-as-a-machine-client)
+["Try it: calling the API as a machine client"](full-guide.md#try-it-calling-the-api-as-a-machine-client)
 section has a ready-made `curl` recipe for exactly this, or just open your browser's network tab
 and manually re-fire the request as the wrong role.
 

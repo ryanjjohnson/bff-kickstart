@@ -16,8 +16,8 @@ Each doc stands alone - a senior developer landing directly on 03 isn't missing 
 They get progressively more detailed, not more correct; nothing in 02 is a simplification that 03
 contradicts.
 
-The two existing project READMEs remain the authoritative, line-level source of truth for
+Two in-depth guides remain the authoritative, line-level source of truth for
 everything else about this app (running it, project structure, validation, roles, adding a
-feature's UI/API plumbing) - see [`../README.md`](../README.md) and
-[`../frontend/README.md`](../frontend/README.md). These docs are a lens on the *authentication*
+feature's UI/API plumbing) - see [`full-guide.md`](full-guide.md) and
+[`frontend-guide.md`](frontend-guide.md). These docs are a lens on the *authentication*
 slice of that material, organized by audience instead of by file.
