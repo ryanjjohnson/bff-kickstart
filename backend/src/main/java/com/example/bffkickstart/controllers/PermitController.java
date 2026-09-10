@@ -8,6 +8,7 @@ import com.example.bffkickstart.dtos.PermitRequest;
 import com.example.bffkickstart.dtos.PermitResponse;
 import com.example.bffkickstart.services.PermitService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class PermitController {
             @RequestParam(required = false) Long facilityId,
             @RequestParam(required = false) PermitType type,
             @RequestParam(required = false) PermitStatus status,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         return permitService.search(q, facilityId, type, status, pageable);
     }
 

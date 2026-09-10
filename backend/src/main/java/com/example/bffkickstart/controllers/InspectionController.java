@@ -7,6 +7,7 @@ import com.example.bffkickstart.dtos.InspectionResponse;
 import com.example.bffkickstart.dtos.PageResponse;
 import com.example.bffkickstart.services.InspectionService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class InspectionController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Long facilityId,
             @RequestParam(required = false) InspectionOutcome outcome,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         return inspectionService.search(q, facilityId, outcome, pageable);
     }
 

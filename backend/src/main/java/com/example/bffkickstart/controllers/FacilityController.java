@@ -7,6 +7,7 @@ import com.example.bffkickstart.dtos.FacilityResponse;
 import com.example.bffkickstart.dtos.PageResponse;
 import com.example.bffkickstart.services.FacilityService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class FacilityController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) FacilityType type,
             @RequestParam(required = false) Boolean active,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         return facilityService.search(q, type, active, pageable);
     }
 
