@@ -9,7 +9,7 @@ Flyway · H2 (dev) — Keycloak.
 
 ## Fastest start (no Docker, no local Keycloak)
 
-You need Java 21+, Node 20+, Maven, and the Keycloak connection details someone gave you
+You need Java 17+, Node 20+, Maven, and the Keycloak connection details someone gave you
 (issuer URL, client id, client secret). Your client config must allow the redirect URI
 `http://localhost:5173/bff-kickstart/login/oauth2/code/keycloak` — if login bounces, that's why.
 
