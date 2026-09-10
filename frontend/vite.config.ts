@@ -1,6 +1,9 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, loadEnv, type ProxyOptions } from 'vite'
+// Default-imported with an import attribute (rather than a named import)
+// because tsconfig's NodeNext module mode requires both for JSON modules.
+import pkg from './package.json' with { type: 'json' }
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -56,6 +59,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: `${frontendBasePath}/`,
+    // package.json's version, compiled into the bundle (the footer shows it).
+    // JSON.stringify because `define` values are spliced in as raw source text.
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     plugins: [react(), tailwindcss()],
     server: {
       port: 5173,

@@ -19,7 +19,7 @@ export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* `dark` scopes HeroUI's own component colors (Button, Chip, ...) to its
           dark-theme values for legibility against this bar's forest-green background -
           see index.css for why the bar itself uses a literal hex rather than a
@@ -109,9 +109,16 @@ export function AppShell() {
           </nav>
         )}
       </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
         <Outlet />
       </main>
+      {/* The header's quieter sibling: same brand green, but as a translucent
+          tint over the page background so it reads as chrome, not content. */}
+      <footer className="border-t border-[#0F6A44]/20 bg-[#0F6A44]/10">
+        <div className="mx-auto max-w-6xl px-6 py-3 text-sm text-foreground/70">
+          Application Version: <span className="font-mono">{__APP_VERSION__}</span>
+        </div>
+      </footer>
     </div>
   );
 }

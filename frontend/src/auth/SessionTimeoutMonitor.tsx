@@ -39,7 +39,11 @@ export function SessionTimeoutMonitor() {
     // the "I'm still here" button while the dialog blocked the panel's own
     // close button. The warning dialog must win the stacking contest outright.
     <AlertDialog.Backdrop isOpen={isWarning} onOpenChange={() => {}} className="z-[100001]">
-      <AlertDialog.Container>
+      {/* placement="center", not the default "auto": auto docks the dialog to
+          the bottom edge on narrow viewports (bottom-sheet style), which reads
+          as broken for a blocking security countdown. Keep it centered
+          everywhere. */}
+      <AlertDialog.Container placement="center">
         <AlertDialog.Dialog aria-label="Session timeout warning">
           <AlertDialog.Header>
             <AlertDialog.Icon status="warning" />
