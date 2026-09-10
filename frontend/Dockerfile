@@ -8,8 +8,16 @@ ARG VITE_FRONTEND_BASE_PATH=/bff-kickstart
 # variable. Only vite.config.ts reads this at build time; the client bundle
 # never needs it.
 ARG BACKEND_BASE_PATH=/bff-kickstart-api
+# Session timing (seconds) - same compile-time caveat as the base paths above.
+# Defaults mirror src/lib/config.ts; see the root .env.example.
+ARG VITE_IDLE_TIMEOUT_SECONDS=300
+ARG VITE_IDLE_WARNING_SECONDS=60
+ARG VITE_AUTH_RECHECK_SECONDS=30
 ENV VITE_FRONTEND_BASE_PATH=$VITE_FRONTEND_BASE_PATH
 ENV BACKEND_BASE_PATH=$BACKEND_BASE_PATH
+ENV VITE_IDLE_TIMEOUT_SECONDS=$VITE_IDLE_TIMEOUT_SECONDS
+ENV VITE_IDLE_WARNING_SECONDS=$VITE_IDLE_WARNING_SECONDS
+ENV VITE_AUTH_RECHECK_SECONDS=$VITE_AUTH_RECHECK_SECONDS
 WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci

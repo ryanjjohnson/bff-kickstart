@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMe, beginLogin, performLogout, type Role } from '../lib/auth-client';
+import { AUTH_RECHECK_SECONDS } from '../lib/config';
 
 interface AuthContextValue {
   isLoading: boolean;
@@ -36,7 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // re-verifies with Keycloak on a timer rather than trusting the push alone.
     // /api/me itself does the actual re-verification (token introspection); this
     // just makes sure that happens periodically, not only at page load.
-    refetchInterval: 30_000,
+    // Interval is env-configurable - see lib/config.ts.
+    refetchInterval: AUTH_RECHECK_SECONDS * 1000,
     refetchIntervalInBackground: false,
   });
 

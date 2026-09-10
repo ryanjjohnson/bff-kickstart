@@ -101,6 +101,7 @@ services:
       FRONTEND_BASE_PATH: ${FRONTEND_BASE_PATH:-/bff-kickstart}
       API_EXPOSED: ${API_EXPOSED:-false}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-15m}
     ports:
       - "${BACKEND_PORT:-8081}:${BACKEND_PORT:-8081}"
     depends_on:
@@ -118,6 +119,11 @@ services:
         # shipped to the client bundle. See frontend/.env's comment on it.
         VITE_FRONTEND_BASE_PATH: ${FRONTEND_BASE_PATH:-/bff-kickstart}
         BACKEND_BASE_PATH: ${BACKEND_BASE_PATH:-/bff-kickstart-api}
+        # Session timing (seconds) - see .env.example. Build args because Vite
+        # bakes them into the client bundle; changing them means a rebuild.
+        VITE_IDLE_TIMEOUT_SECONDS: ${IDLE_TIMEOUT_SECONDS:-300}
+        VITE_IDLE_WARNING_SECONDS: ${IDLE_WARNING_SECONDS:-60}
+        VITE_AUTH_RECHECK_SECONDS: ${AUTH_RECHECK_SECONDS:-30}
     restart: unless-stopped
     environment:
       # Rendered into nginx's config at container start (envsubst) - see
