@@ -1,2 +1,8 @@
+# Root .env holds your local overrides (incl. the Keycloak client secret) - never committed.
 .env
+# The frontend's .env is different: nothing but public base paths and timing defaults,
+# and the dev server is broken without it - so it ships. (Discovered the hard way: a fresh
+# clone's `npm run dev` proxied nothing, because Vite fell back to base "/" while the
+# backend lives at /bff-kickstart-api.)
+!frontend/.env
 .DS_Store
