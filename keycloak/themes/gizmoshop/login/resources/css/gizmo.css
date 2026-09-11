@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+:root {
+  --gizmo-navy: #0B3D2E;
+  --gizmo-teal: #0F6A44;
+  --gizmo-teal-light: #1B8556;
+  --gizmo-blue: #2FA36B;
+  --gizmo-blue-dark: #248257;
+  --gizmo-danger: #d10f4f;
+  --gizmo-border: #d9e0e4;
+  --gizmo-text: #1a2b33;
+  --gizmo-radius: 14px;
+  --gizmo-focus-ring: 0 0 0 3px rgba(15, 106, 68, 0.18);
+  --gizmo-font: 'Source Sans Pro', helvetica, arial, sans-serif;
+
+  /* Source Sans Pro everywhere PatternFly looks up a font */
+  --pf-v5-global--FontFamily--text: var(--gizmo-font);
+  --pf-v5-global--FontFamily--heading: var(--gizmo-font);
+  --pf-v5-global--FontFamily--sans-serif: var(--gizmo-font);
+  --pf-v5-global--FontFamily--redhat--sans-serif: var(--gizmo-font);
+  --pf-v5-global--FontFamily--redhat--heading: var(--gizmo-font);
+  --pf-v5-global--FontFamily--overpass--sans-serif: var(--gizmo-font);
+}
+
+body {
+  font-family: var(--gizmo-font);
+}
+
+/* Form elements don't inherit by default */
+button:not([class*="fa"]),
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--gizmo-font);
+}
+
+/* Page background: gizmoshop header gradient */
+.pf-v5-c-login {
+  --pf-v5-c-login--m-gradient--BackgroundImage: none;
+  background: linear-gradient(180deg, var(--gizmo-navy) 0%, var(--gizmo-teal) 55%, var(--gizmo-teal-light) 100%);
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Remove the large default top margin above the header ("forehead") */
+#kc-header.pf-v5-c-login__header {
+  margin-top: 0;
+}
+
+/* Realm header: gizmoshop logo to the left of the organization name */
+#kc-header-wrapper.pf-v5-c-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  color: #ffffff;
+  font-family: 'Source Sans Pro', helvetica, arial, sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  text-align: left;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0.5rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+#kc-header-wrapper.pf-v5-c-brand::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 76px;
+  height: 76px;
+  margin: 0;
+  background: url('../img/gizmo-logo.png') center / contain no-repeat;
+}
+
+/* On narrow screens, stack the lockup again */
+@media (max-width: 480px) {
+  #kc-header-wrapper.pf-v5-c-brand {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+/* Card: soft, rounded, HeroUI-style */
+.pf-v5-c-login__main {
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(11, 61, 46, 0.35);
+  overflow: hidden;
+  padding: 0.75rem 0.5rem;
+}
+
+/* Keycloak's own blue accent strip on the card header -- drop it */
+.pf-v5-c-login__main .pf-v5-c-login__main-header {
+  border-top: none;
+}
+
+.pf-v5-c-title {
+  color: var(--gizmo-navy);
+  font-family: 'Source Sans Pro', helvetica, arial, sans-serif;
+  font-weight: 700;
+}
+
+/* Labels: bold with HeroUI-pink required asterisk */
+.pf-v5-c-form__label-text {
+  font-weight: 700;
+  color: var(--gizmo-text);
+}
+
+.pf-v5-c-form__label-required,
+.pf-v5-c-check__label-required {
+  color: var(--gizmo-danger);
+}
+
+/* Text inputs & selects: tall, rounded, soft border, teal focus ring.
+   PF5 wraps inputs in span.pf-v5-c-form-control and draws its own bottom
+   "underline" via ::before/::after -- neutralize that in favor of a real border. */
+.pf-v5-c-form-control {
+  border: 1px solid var(--gizmo-border);
+  border-radius: var(--gizmo-radius);
+  background-color: #ffffff;
+  min-height: 48px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf-v5-c-form-control::before,
+.pf-v5-c-form-control::after {
+  border: none !important;
+}
+
+.pf-v5-c-form-control:focus-within {
+  border-color: var(--gizmo-teal);
+  box-shadow: var(--gizmo-focus-ring);
+}
+
+.pf-v5-c-form-control > input,
+.pf-v5-c-form-control > select,
+.pf-v5-c-form-control > textarea {
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+/* Input groups (password + eye toggle): one rounded shell */
+.pf-v5-c-input-group {
+  border: 1px solid var(--gizmo-border);
+  border-radius: var(--gizmo-radius);
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf-v5-c-input-group:focus-within {
+  border-color: var(--gizmo-teal);
+  box-shadow: var(--gizmo-focus-ring);
+}
+
+.pf-v5-c-input-group .pf-v5-c-form-control,
+.pf-v5-c-input-group .pf-v5-c-form-control:focus-within {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pf-v5-c-input-group .pf-v5-c-button.pf-m-control {
+  border: none;
+  background: transparent;
+  color: #6a7a83;
+  border-radius: 0;
+}
+
+.pf-v5-c-input-group .pf-v5-c-button.pf-m-control::after {
+  border: none;
+}
+
+/* Buttons: pill-shaped */
+.pf-v5-c-button {
+  border-radius: 9999px;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--gizmo-teal);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--gizmo-navy);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--gizmo-navy);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--gizmo-navy);
+  min-height: 46px;
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+  box-shadow: 0 4px 12px rgba(15, 106, 68, 0.35);
+}
+
+.pf-v5-c-button.pf-m-secondary {
+  --pf-v5-c-button--m-secondary--Color: var(--gizmo-teal);
+  --pf-v5-c-button--m-secondary--BorderColor: var(--gizmo-teal);
+  --pf-v5-c-button--m-secondary--hover--Color: var(--gizmo-navy);
+  --pf-v5-c-button--m-secondary--hover--BorderColor: var(--gizmo-navy);
+  min-height: 46px;
+}
+
+/* Links */
+.pf-v5-c-login__main a,
+.pf-v5-c-button.pf-m-link {
+  --pf-v5-c-button--m-link--Color: var(--gizmo-blue);
+  --pf-v5-c-button--m-link--hover--Color: var(--gizmo-blue-dark);
+  color: var(--gizmo-blue);
+}
+
+.pf-v5-c-login__main a:hover {
+  color: var(--gizmo-blue-dark);
+}
+
+/* Checkboxes */
+.pf-v5-c-check__input {
+  accent-color: var(--gizmo-teal);
+}
+
+/* Alerts / error messages: rounded to match */
+.pf-v5-c-alert {
+  border-radius: var(--gizmo-radius);
+}
+
+/* Keycloak puts .kc-feedback-text on EVERY alert's title (success, warning,
+   info, danger alike), so the danger color must stay scoped to danger alerts --
+   success/warning/info keep PatternFly's own semantic text colors. */
+.pf-v5-c-helper-text__item-text.pf-m-error,
+.pf-v5-c-alert.pf-m-danger .kc-feedback-text {
+  color: var(--gizmo-danger);
+}
+
+/* Footer text on the dark background */
+.pf-v5-c-login__main-footer-band,
+.pf-v5-c-login__footer {
+  color: #d7e5ec;
+}
+
+/*
+ * Registration: the username is generated server side (lastname_fm_#) by the
+ * bff-registration-user-creation form action, so the field is hidden from the user.
+ * Scoped to the registration form only -- the login form also has an #username input.
+ */
+form#kc-register-form .pf-v5-c-form__group:has(input#username) {
+  display: none !important;
+}
