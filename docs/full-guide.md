@@ -11,7 +11,7 @@ A starter app for gizmo-manufacturing inspection and reporting tools:
 
 See `docs/frontend-guide.md` for the frontend developer guide (feature-module conventions, validation, security, session timeout, styling, proxying in depth).
 
-**Digging into the auth architecture?** See [`docs/`](docs/) for two audience-sized versions of
+**Digging into the auth architecture?** See [the docs index](README.md) for two audience-sized versions of
 it: a checklist for adding a secure feature, and a full reference (threat model, hardening,
 extending it) for whoever owns this long term.
 
@@ -38,7 +38,7 @@ variables (already parameterized in `docker-compose.yml`'s `backend` service and
 `backend/src/main/resources/application.properties`, defaulted there to the local stand-in) to
 whatever your identity/platform team gives you for this app's registered client there - no code
 change. See
-[docs/03-full-reference.md](docs/03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso)
+[docs/03-full-reference.md](03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso)
 for the mechanics of the local stand-in specifically, and what does/doesn't carry over to the real
 thing.
 
@@ -60,7 +60,7 @@ real gizmoshop SSO instance, which you reach over the network like any other giz
 The local identity stand-in is built from a custom image (`keycloak/Dockerfile`) that bakes in a
 gizmoshop-branded theme and a registration provider - reference implementations for whoever
 operates the real gizmoshop SSO, included here mainly for local-dev parity (see
-[docs/03-full-reference.md](docs/03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso) if
+[docs/03-full-reference.md](03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso) if
 you're curious; day-to-day feature work doesn't touch this). Build its jar once before the first
 `docker compose up --build`:
 
@@ -109,7 +109,7 @@ org's policy doesn't allow it. Nothing here changes the Docker path above; both 
 supported side by side, and the same running-app experience results either way.
 
 The one piece with no simple native equivalent is Keycloak itself, so
-[`scripts/run-keycloak-native.sh`](scripts/run-keycloak-native.sh) handles it: it downloads the
+[`scripts/run-keycloak-native.sh`](../scripts/run-keycloak-native.sh) handles it: it downloads the
 official Keycloak distribution once (cached in `keycloak/.dist/`, gitignored), copies in this
 repo's theme/registration SPI/realm export - the same three things `keycloak/Dockerfile` bakes into
 the image - and starts it in dev mode on `:8080` against its own embedded dev database, no Postgres
@@ -197,7 +197,7 @@ Because both paths land on the same `ROLE_*` naming, every `@PreAuthorize("hasRo
 
 ### CSRF
 
-Session-cookie requests still require the `X-XSRF-TOKEN` header (see `docs/frontend-guide.md`), since a cookie can be silently replayed by a browser cross-site. Bearer-token requests are exempt from CSRF - a Bearer token can't be attached to a request the caller didn't deliberately construct, so there's nothing CSRF protection is guarding against - via `SecurityConfig`'s conditional check on the `Authorization` header, active only when `API_EXPOSED=true` (see below). The check specifically requires a `Bearer ` prefix, not just header presence - an earlier, looser version of this check (matching on any `Authorization` header at all) was a confirmed CSRF bypass, since a non-Bearer value skips CSRF but still falls through to session-cookie auth; see [docs/03-full-reference.md](docs/03-full-reference.md#csrf-bypass-via-a-non-bearer-authorization-header) for the full incident.
+Session-cookie requests still require the `X-XSRF-TOKEN` header (see `docs/frontend-guide.md`), since a cookie can be silently replayed by a browser cross-site. Bearer-token requests are exempt from CSRF - a Bearer token can't be attached to a request the caller didn't deliberately construct, so there's nothing CSRF protection is guarding against - via `SecurityConfig`'s conditional check on the `Authorization` header, active only when `API_EXPOSED=true` (see below). The check specifically requires a `Bearer ` prefix, not just header presence - an earlier, looser version of this check (matching on any `Authorization` header at all) was a confirmed CSRF bypass, since a non-Bearer value skips CSRF but still falls through to session-cookie auth; see [docs/03-full-reference.md](03-full-reference.md#csrf-bypass-via-a-non-bearer-authorization-header) for the full incident.
 
 ### Configuration
 
@@ -268,7 +268,7 @@ Springdoc-openapi is wired up but gated behind both the app's normal BFF session
 
 - **Enable it first**: `SWAGGER_ENABLED=true` in `.env` (defaults to `false` - springdoc's endpoints don't exist at all otherwise, regardless of role).
 - **Reached entirely through the frontend's own proxy, same as every other backend-owned path** - `http://localhost:3000/bff-kickstart/swagger-ui.html` (springdoc's default path, nested under `FRONTEND_BASE_PATH` like `/api`, `/oauth2`, `/login` already are - see `nginx.conf.template`'s `/swagger-ui/` and `/v3/api-docs` locations, and `vite.config.ts`'s dev-server proxy for the `npm run dev` equivalent). The backend has no browser-facing port of its own for this either, by design - it's never meant to be routable from outside the container network. Log in via the frontend first, then navigate to that URL directly. Don't expect to land on Swagger straight from a cold, unauthenticated hit on it: `SecurityConfig`'s OAuth2 login success handler always redirects to the frontend's home page after any login (a deliberate choice - see the comment above `.successHandler(...)`), not back to whatever URL triggered the login, so a cold hit bounces you home, not to Swagger.
-- **"Try it out" and CSRF**: a mutating call fired from Swagger UI's own JS won't automatically carry the app's `X-XSRF-TOKEN` header, so it'll 403 unless you copy the `XSRF-TOKEN` cookie's value into the header manually via Swagger's UI. This is a known rough edge, not a bug - see [docs/02](docs/02-adding-a-secure-feature.md) and the one thing to internalize there: the frontend layer is convenience, and the same is true of Swagger's own request-building UI.
+- **"Try it out" and CSRF**: a mutating call fired from Swagger UI's own JS won't automatically carry the app's `X-XSRF-TOKEN` header, so it'll 403 unless you copy the `XSRF-TOKEN` cookie's value into the header manually via Swagger's UI. This is a known rough edge, not a bug - see [docs/02](02-adding-a-secure-feature.md) and the one thing to internalize there: the frontend layer is convenience, and the same is true of Swagger's own request-building UI.
 - **Roles still apply underneath**: reaching Swagger doesn't change what any given call is authorized to do - a `Viewer` + `API Developer` user can browse the docs and issue GETs, but a POST from Swagger 403s exactly the same as it would from `curl`, because the underlying `@PreAuthorize` checks never moved.
 
 ## Session lifecycle
@@ -284,7 +284,7 @@ provider (`keycloak/themes/gizmoshop/`, `keycloak/providers/bff-registration-spi
 implementations of what gizmoshop SSO's own platform team would run centrally, useful for seeing
 the full branded sign-up flow locally. **This isn't something feature developers on this app build
 or maintain** - see
-[docs/03-full-reference.md](docs/03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso) if
+[docs/03-full-reference.md](03-full-reference.md#local-stand-in-vs-the-real-gizmoshop-sso) if
 you're the one operating the local stand-in itself (rebuilding it after a theme/SPI/realm change,
 what `kickstart.sh` does and doesn't rebrand about it, etc.).
 
@@ -375,8 +375,7 @@ won on its devtools and a slightly richer mutation API, not a fundamental differ
 
 **HeroUI over MUI, Ant Design, Chakra, or shadcn/ui.** MUI's Material Design language and Ant
 Design's own design system both carry a strong visual identity that fights a from-scratch brand
-(exactly the DEP-blue-then-gizmo-green situation this template has actually been through - see
-`docs/theme-blue.patch`); HeroUI's components are accessible and unstyled enough to take brand
+(exactly the reskin-a-whole-brand situation this template is built for); HeroUI's components are accessible and unstyled enough to take brand
 colors directly through Tailwind tokens without a fight. shadcn/ui is a real alternative worth
 naming specifically: it isn't a dependency at all, it's components you copy into your own repo and
 own outright - more ultimate control, at the cost of manually re-copying upstream fixes forever

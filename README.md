@@ -47,6 +47,7 @@ nothing to install. Sending email needs an SMTP server on `mailhog:1025` (option
 
 | Where | What |
 |---|---|
+| [TUTORIAL.md](TUTORIAL.md) | Hands-on walkthrough: add a feature end to end, remove the demo features you don't need |
 | [backend/README.md](backend/README.md) | Backend quick orientation |
 | [frontend/README.md](frontend/README.md) | Frontend quick orientation |
 | [docs/full-guide.md](docs/full-guide.md) | The whole story: Docker Compose setup, local Keycloak stand-in, security architecture, roles, Swagger, reports, PWA, why each technology was chosen |
