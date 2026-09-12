@@ -7,6 +7,14 @@ export interface DataTableColumn<T> {
   render: (row: T) => ReactNode;
   /** Enables click-to-sort on this column's header. `key` must match a property the backend accepts in `?sort=`. */
   sortable?: boolean;
+  /**
+   * Marks this as the column whose cell identifies each row for assistive tech
+   * (react-aria requires exactly one such column, or it throws). Independent of
+   * `sortable` - a column can be both. If no column sets this, the DataTable
+   * uses the first non-"actions" column automatically, so most pages never
+   * need to set it.
+   */
+  isRowHeader?: boolean;
 }
 
 export type SortDirection = 'asc' | 'desc';
@@ -47,13 +55,21 @@ export function DataTable<T extends { id: number | string }>({
   const rangeStart = totalElements === 0 ? 0 : page * pageSize + 1;
   const rangeEnd = Math.min(totalElements, (page + 1) * pageSize);
 
+  // react-aria requires exactly one row-header column. Honor an explicit
+  // isRowHeader; otherwise fall back to the first real data column (never the
+  // trailing "actions" column, which identifies nothing).
+  const rowHeaderKey =
+    columns.find((c) => c.isRowHeader)?.key ??
+    columns.find((c) => c.key !== 'actions')?.key ??
+    columns[0]?.key;
+
   return (
     <Table>
       <Table.ScrollContainer>
         <Table.Content aria-label={ariaLabel}>
           <Table.Header columns={columns}>
             {(column) => (
-              <Table.Column key={column.key} allowsSorting={column.sortable}>
+              <Table.Column key={column.key} allowsSorting={column.sortable} isRowHeader={column.key === rowHeaderKey}>
                 {column.sortable ? (
                   <Table.SortableColumnHeader
                     sortDirection={
