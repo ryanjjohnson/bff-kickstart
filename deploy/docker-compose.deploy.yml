@@ -21,11 +21,15 @@ services:
       - keycloak
 
   keycloak:
-    # No host ports in the public deployment: the tunnel reaches every
-    # container over the compose network, and a busy Docker host (Unraid!)
-    # will collide on 8080/8081/3000/8025. `!override` replaces instead of
-    # merging with the base file's list.
-    ports: !override []
+    # The tunnel reaches Keycloak over the compose network, and its /admin* is
+    # deliberately NOT routed to the public internet (see provision-tunnel.sh).
+    # This host port is how you reach the admin console instead - published on
+    # the LAN only. Safe default is 127.0.0.1 (box-only; use an SSH tunnel);
+    # set KC_ADMIN_BIND to the host's LAN IP in deploy/.env.deploy to reach it
+    # from other machines on the LAN. Never bind this to 0.0.0.0 on a host that
+    # is port-forwarded from the internet - that would re-expose /admin.
+    ports: !override
+      - "${KC_ADMIN_BIND:-127.0.0.1}:${KC_ADMIN_PORT:-18080}:8080"
     environment:
       # Public identity: token issuer and every URL Keycloak renders/embeds.
       KC_HOSTNAME: https://${SSO_HOSTNAME}
