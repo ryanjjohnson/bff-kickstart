@@ -420,6 +420,7 @@
         ]
       },
       "realmRoles": [
+        "default-roles-gizmoshop",
         "Internal User"
       ],
       "attributes": {
@@ -464,6 +465,7 @@
         ]
       },
       "realmRoles": [
+        "default-roles-gizmoshop",
         "Internal User"
       ],
       "attributes": {
@@ -500,6 +502,9 @@
           "value": "password",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-gizmoshop"
       ],
       "clientRoles": {
         "bff-kickstart-client": [
@@ -540,6 +545,9 @@
           "value": "password",
           "temporary": false
         }
+      ],
+      "realmRoles": [
+        "default-roles-gizmoshop"
       ],
       "clientRoles": {
         "bff-kickstart-client": [
@@ -582,6 +590,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-gizmoshop"
+      ],
       "clientRoles": {
         "bff-kickstart-client": [
           "API Developer",
@@ -623,6 +634,9 @@
           "temporary": false
         }
       ],
+      "realmRoles": [
+        "default-roles-gizmoshop"
+      ],
       "clientRoles": {
         "bff-kickstart-client": [
           "API Owner"
@@ -653,6 +667,9 @@
       "username": "service-account-bff-kickstart-service-client",
       "serviceAccountClientId": "bff-kickstart-service-client",
       "enabled": true,
+      "realmRoles": [
+        "default-roles-gizmoshop"
+      ],
       "clientRoles": {
         "bff-kickstart-client": [
           "Viewer",
