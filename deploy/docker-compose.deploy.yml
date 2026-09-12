@@ -21,6 +21,11 @@ services:
       - keycloak
 
   keycloak:
+    # No host ports in the public deployment: the tunnel reaches every
+    # container over the compose network, and a busy Docker host (Unraid!)
+    # will collide on 8080/8081/3000/8025. `!override` replaces instead of
+    # merging with the base file's list.
+    ports: !override []
     environment:
       # Public identity: token issuer and every URL Keycloak renders/embeds.
       KC_HOSTNAME: https://${SSO_HOSTNAME}
@@ -39,6 +44,7 @@ services:
       - ./deploy/realm-export:/opt/keycloak/data/import
 
   backend:
+    ports: !override []
     environment:
       # Browser-facing URI: the redirect to the login page must use the public
       # hostname. Issuer must match what Keycloak now stamps into tokens.
@@ -50,3 +56,11 @@ services:
       APP_CORS_ALLOWED_ORIGINS: https://${APP_HOSTNAME}
       # Session + CSRF cookies over HTTPS only (Spring relaxed env binding).
       SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+
+  frontend:
+    ports: !override []
+
+  mailhog:
+    # Keep the mail UI reachable on the LAN at an unlikely-to-collide port.
+    ports: !override
+      - "18025:8025"
