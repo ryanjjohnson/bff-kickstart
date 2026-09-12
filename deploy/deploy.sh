@@ -63,7 +63,11 @@ EOF
 fi
 
 # --- 3. Realm export, deploy-patched ---
+# 755/644, not the umask default: Keycloak runs as the non-root `keycloak` user
+# inside the container and must be able to list+read this mounted import dir
+# (a root-only 700 dir makes ExportImportManager NPE with "directory not found").
 mkdir -p deploy/realm-export
+chmod 755 deploy/realm-export
 PY - "$APP_HOSTNAME" <<'EOF'
 import json, sys, os
 app = sys.argv[1]
@@ -92,6 +96,7 @@ for client in realm.get('clients', []):
 json.dump(realm, open('deploy/realm-export/gizmoshop-realm.json', 'w'), indent=2)
 print('wrote deploy/realm-export/gizmoshop-realm.json')
 EOF
+chmod 644 deploy/realm-export/gizmoshop-realm.json
 
 # --- 4. SPI jar via dockerized Maven (Unraid has no JDK) ---
 SPI_JAR=keycloak/providers/bff-registration-spi/target/bff-registration-spi.jar
