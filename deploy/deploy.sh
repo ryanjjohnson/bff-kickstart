@@ -20,6 +20,13 @@
 # Requires: docker with the compose plugin, curl, python3, openssl.
 
 set -euo pipefail
+
+# Hosts like stock Unraid have no python3 - fall back to a throwaway container.
+if command -v python3 >/dev/null 2>&1; then
+  PY() { python3 "$@"; }
+else
+  PY() { docker run --rm -i -v "$PWD:$PWD" -w "$PWD" python:3.12-alpine python3 "$@"; }
+fi
 cd "$(dirname "$0")/.."
 : "${CF_API_TOKEN:?}" "${ZONE_NAME:?}" "${APP_HOSTNAME:?}" "${SSO_HOSTNAME:?}"
 
@@ -43,7 +50,7 @@ EOF
   echo "wrote $ENV_DEPLOY (new secrets generated)"
 else
   # keep secrets, refresh hostnames + token
-  python3 - "$ENV_DEPLOY" "$APP_HOSTNAME" "$SSO_HOSTNAME" "${TUNNEL_LINE#TUNNEL_TOKEN=}" <<'EOF'
+  PY - "$ENV_DEPLOY" "$APP_HOSTNAME" "$SSO_HOSTNAME" "${TUNNEL_LINE#TUNNEL_TOKEN=}" <<'EOF'
 import sys
 path, app, sso, token = sys.argv[1:]
 lines = {l.split('=',1)[0]: l.rstrip('\n') for l in open(path) if '=' in l}
@@ -57,7 +64,7 @@ fi
 
 # --- 3. Realm export, deploy-patched ---
 mkdir -p deploy/realm-export
-python3 - "$APP_HOSTNAME" <<'EOF'
+PY - "$APP_HOSTNAME" <<'EOF'
 import json, sys, os
 app = sys.argv[1]
 secret = next(l.split('=',1)[1].strip() for l in open('deploy/.env.deploy') if l.startswith('KEYCLOAK_CLIENT_SECRET='))

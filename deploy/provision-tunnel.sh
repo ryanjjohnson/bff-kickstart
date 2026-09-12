@@ -11,6 +11,13 @@
 #   TUNNEL_NAME    optional, default bff-kickstart
 
 set -euo pipefail
+
+# Hosts like stock Unraid have no python3 - fall back to a throwaway container.
+if command -v python3 >/dev/null 2>&1; then
+  PY() { python3 "$@"; }
+else
+  PY() { docker run --rm -i -v "$PWD:$PWD" -w "$PWD" python:3.12-alpine python3 "$@"; }
+fi
 : "${CF_API_TOKEN:?}" "${ZONE_NAME:?}" "${APP_HOSTNAME:?}" "${SSO_HOSTNAME:?}"
 TUNNEL_NAME="${TUNNEL_NAME:-bff-kickstart}"
 
@@ -22,7 +29,7 @@ api() { # method path [json-body]
     ${body:+--data "$body"}
 }
 
-jqpy() { python3 -c "import json,sys; r=json.load(sys.stdin); $1"; }
+jqpy() { PY -c "import json,sys; r=json.load(sys.stdin); $1"; }
 
 echo "Looking up zone $ZONE_NAME..." >&2
 ZONE_JSON=$(api GET "/zones?name=$ZONE_NAME")
