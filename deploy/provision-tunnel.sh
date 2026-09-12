@@ -3,6 +3,11 @@
 # hostname->service ingress rules, and proxied CNAME records for both
 # hostnames. Prints TUNNEL_TOKEN=... on success (deploy.sh captures it).
 #
+# The SSO hostname's /admin* (Keycloak admin console + admin REST API) routes
+# to a 404, not the container - never exposed to the public internet, LAN-only.
+# Rule order matters: cloudflared uses first-match, so this must precede the
+# general SSO rule below.
+#
 # Required env:
 #   CF_API_TOKEN   scoped token: Account>Cloudflare Tunnel>Edit + Zone>DNS>Edit
 #   ZONE_NAME      e.g. example.com (must be a zone the token can edit)
@@ -53,6 +58,7 @@ echo "Writing ingress config..." >&2
 api PUT "/accounts/$ACCOUNT_ID/cfd_tunnel/$TUNNEL_ID/configurations" "{
   \"config\": { \"ingress\": [
     {\"hostname\": \"$APP_HOSTNAME\", \"service\": \"http://frontend:80\"},
+    {\"hostname\": \"$SSO_HOSTNAME\", \"path\": \"^/admin\", \"service\": \"http_status:404\"},
     {\"hostname\": \"$SSO_HOSTNAME\", \"service\": \"http://keycloak:8080\"},
     {\"service\": \"http_status:404\"}
   ]}}" | jqpy "assert r['success'], r; print('ingress ok', file=sys.stderr)"
