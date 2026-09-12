@@ -33,9 +33,28 @@ with the overlay. Re-run it any time; it converges.
 | Surface | Exposure |
 |---|---|
 | `https://APP_HOSTNAME/bff-kickstart/` | Public - the app |
-| `https://SSO_HOSTNAME` | Public - Keycloak (login/registration/account) |
-| `https://SSO_HOSTNAME/admin` | Public URL, guarded only by the rotated admin password - consider a Cloudflare Access policy on `/admin/*` |
+| `https://SSO_HOSTNAME` | Public - Keycloak login/registration/account (but NOT `/admin`) |
+| `https://SSO_HOSTNAME/admin*` | **404 from the internet** - the tunnel doesn't route it (provision-tunnel.sh) |
+| Keycloak admin console | LAN/host-only via a published port - see below |
 | Backend, Postgres, Mailhog | Not exposed - compose network only |
+
+### Reaching the Keycloak admin console
+
+`/admin` is deliberately off the public tunnel, so the admin console is reached through a
+host port instead, published by the deploy overlay. Two env vars in `deploy/.env.deploy`
+control it:
+
+- `KC_ADMIN_BIND` - host interface to bind. Default `127.0.0.1` (box-only; reach it with an
+  SSH tunnel: `ssh -L 18080:127.0.0.1:18080 root@HOST` then open `http://localhost:18080/admin/`).
+  Set it to the host's **LAN IP** to reach the console from other machines on the LAN.
+- `KC_ADMIN_PORT` - host port (default `18080`).
+- `KC_ADMIN_URL` - the admin console's own base URL, e.g. `http://192.168.1.191:18080`. Set
+  this to match, or the console redirects to the public `KC_HOSTNAME` (whose `/admin` 404s).
+  It sets Keycloak's `KC_HOSTNAME_ADMIN`, so the admin console authenticates against the
+  public auth server but stays on the LAN URL. Reach it by that exact host, not an alias.
+
+Never set `KC_ADMIN_BIND` to `0.0.0.0` on a host that is port-forwarded from the internet -
+that re-exposes `/admin` publicly, defeating the tunnel block.
 
 The demo app users (`admin`/`inspector`/`viewer`/`manager`, password `password`) ship
 as-is: that's the point of a public demo, and they can't reach anything but demo data
