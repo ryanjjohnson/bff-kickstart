@@ -25,13 +25,13 @@ export function AppShell() {
           see index.css for why the bar itself uses a literal hex rather than a
           token: it's gizmoshop's own brand green, not a semantic surface. */}
       <header className="dark sticky top-0 z-20 bg-[#0F6A44] text-white shadow-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <div className="flex min-w-0 items-center gap-4 xl:gap-8">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <img
                 src={gizmoLogo}
                 alt="gizmoshop"
-                className="h-12 w-12 xl:h-20 xl:w-20"
+                className="h-9 w-9 xl:h-11 xl:w-11"
               />
               {/* On phone widths the signed-in header can't fit wordmark + user menu +
                   sign-out + menu toggle; the logo alone carries the identity there. */}
@@ -109,7 +109,7 @@ export function AppShell() {
           </nav>
         )}
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
         <Outlet />
       </main>
       {/* The header's quieter sibling: same brand green, but as a translucent

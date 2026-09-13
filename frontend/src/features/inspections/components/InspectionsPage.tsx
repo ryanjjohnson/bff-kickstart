@@ -133,13 +133,13 @@ export function InspectionsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Inspections</h1>
           <p className="text-sm text-muted">Compliance inspections performed at facilities.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canManageData && (
             <BulkActions
               onExport={exportInspectionsCsv}

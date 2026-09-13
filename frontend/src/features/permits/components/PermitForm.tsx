@@ -56,12 +56,12 @@ export function PermitForm({ defaultValues, onSubmit, onCancel, isSubmitting, se
         parseValue={(key) => Number(key)}
         isRequired
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextInputField control={control} name="permitNumber" label="Permit number" isRequired />
         <SelectField control={control} name="permitType" label="Permit type" options={typeOptions} isRequired />
       </div>
       <SelectField control={control} name="status" label="Status" options={statusOptions} isRequired />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <DatePickerField control={control} name="issuedDate" label="Issued date" />
         <DatePickerField control={control} name="expirationDate" label="Expiration date" />
       </div>

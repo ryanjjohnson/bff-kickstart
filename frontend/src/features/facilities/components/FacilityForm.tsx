@@ -145,8 +145,8 @@ export function FacilityForm({ defaultValues, onSubmit, onCancel, isSubmitting, 
         isRequired
       />
       <TextInputField control={control} name="addressLine1" label="Address" isRequired />
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-1">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="col-span-2 sm:col-span-1">
           <TextInputField control={control} name="city" label="City" isRequired />
         </div>
         <StateComboBoxField control={control} name="state" label="State" options={stateCodes ?? []} isRequired />

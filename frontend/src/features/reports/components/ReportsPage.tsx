@@ -8,15 +8,15 @@ export function ReportsPage() {
   const { data: rows, isLoading } = useComplianceReport();
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Compliance Report</h1>
           <p className="text-sm text-muted">
             Every permit, its expiration status, and its most recent inspection outcome.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onPress={() => window.location.assign(`${FRONTEND_BASE_PATH}/api/v1/reports/compliance/csv`)}

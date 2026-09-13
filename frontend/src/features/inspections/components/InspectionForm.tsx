@@ -52,7 +52,7 @@ export function InspectionForm({ defaultValues, onSubmit, onCancel, isSubmitting
   return (
     <Form validationBehavior="aria" className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
       <FormErrorSummary error={serverError} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <SelectField
           control={control}
           name="facilityId"
@@ -71,7 +71,7 @@ export function InspectionForm({ defaultValues, onSubmit, onCancel, isSubmitting
         />
       </div>
       <TextInputField control={control} name="inspectorName" label="Inspector name" isRequired />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <DatePickerField control={control} name="scheduledDate" label="Scheduled date" isRequired />
         <DatePickerField control={control} name="completedDate" label="Completed date" />
       </div>

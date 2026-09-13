@@ -14,7 +14,7 @@ export function HomePage() {
   const { isAuthenticated, fullName, roles, login } = useAuth();
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">
           {isAuthenticated ? `Welcome, ${fullName}` : 'Welcome to BFF Kickstart'}
