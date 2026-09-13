@@ -43,8 +43,31 @@
 :root {
   --accent: #1F8A56;
   --accent-foreground: #ffffff;
+  /*
+   * Squared, utilitarian corners for a civic/government feel instead of the
+   * consumer-app roundness HeroUI ships (default .5rem). Every component -
+   * buttons, cards, inputs, chips - derives its radius from this one token as
+   * calc(var(--radius) * N), so shrinking it here squares the whole app at
+   * once. 2px keeps a hair of softening without reading as a rounded "app".
+   */
+  --radius: 2px;
 }
 
 body {
   font-family: 'Roboto Condensed', sans-serif;
+}
+
+/*
+ * Denser, data-first tables. HeroUI's default row padding (padding-block
+ * --spacing * 3 = 24px per row) reads as an airy consumer app; a government
+ * register packs more rows on screen. Unlayered, so these win over
+ * @heroui/styles' layered defaults without !important (same tactic as the
+ * tokens above). Targets HeroUI's own table classes - if a future upgrade
+ * renames them these simply stop applying, leaving the stock padding.
+ */
+.table__cell {
+  padding-block: calc(var(--spacing) * 1.75);
+}
+.table__column {
+  padding-block: calc(var(--spacing) * 1.75);
 }

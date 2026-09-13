@@ -24,7 +24,10 @@ export function AppShell() {
           dark-theme values for legibility against this bar's forest-green background -
           see index.css for why the bar itself uses a literal hex rather than a
           token: it's gizmoshop's own brand green, not a semantic surface. */}
-      <header className="dark sticky top-0 z-20 bg-[#0F6A44] text-white shadow-md">
+      {/* A flat official masthead: solid brand-green bar with a hard darker
+          bottom rule (the palette's darkest green) rather than a soft drop
+          shadow - reads as government chrome, not a floating app bar. */}
+      <header className="dark sticky top-0 z-20 border-b-2 border-[#0B3D2E] bg-[#0F6A44] text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <div className="flex min-w-0 items-center gap-4 xl:gap-8">
             <div className="flex items-center gap-2.5">

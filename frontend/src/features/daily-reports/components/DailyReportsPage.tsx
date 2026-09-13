@@ -5,7 +5,7 @@ export function DailyReportsPage() {
   const { data: rows, isLoading } = useDailyReports();
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-2xl font-semibold">Daily Reports</h1>
         <p className="text-sm text-muted">
