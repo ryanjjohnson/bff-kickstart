@@ -8,6 +8,7 @@ import org.springframework.mail.MailException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -52,6 +53,16 @@ public class GlobalExceptionHandler {
                 "Unknown sort or filter property '%s' for %s".formatted(
                         ex.getPropertyName(), ex.getType().getType().getSimpleName()),
                 req, null);
+    }
+
+    /**
+     * A too-large upload (photo attachment or CSV import) that slipped past the
+     * client-side check and nginx's larger ceiling. Answer 413 with a clear
+     * message rather than a bare 500 - a caller problem, not a server fault.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest req) {
+        return build(HttpStatus.PAYLOAD_TOO_LARGE, "File is too large. The maximum upload size is 20MB.", req, null);
     }
 
     @ExceptionHandler(MailException.class)

@@ -14,6 +14,11 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Reject oversize files up front with a clear message, rather than firing a
+// doomed upload the backend (or nginx) would 413. Keep in sync with the server
+// limit: spring.servlet.multipart.max-file-size in application.properties.
+const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+
 interface InspectionAttachmentsProps {
   inspectionId: number;
   canEdit: boolean;
@@ -37,8 +42,14 @@ export function InspectionAttachments({ inspectionId, canEdit }: InspectionAttac
   async function handleFiles(fileList: FileList | null) {
     const files = Array.from(fileList ?? []);
     if (files.length === 0) return;
-    setUploadingCount((n) => n + files.length);
-    for (const file of files) {
+    const tooLarge = files.filter((file) => file.size > MAX_ATTACHMENT_BYTES);
+    tooLarge.forEach((file) =>
+      toast.danger(`${file.name} is ${formatSize(file.size)} - the maximum upload size is 20MB.`),
+    );
+    const allowed = files.filter((file) => file.size <= MAX_ATTACHMENT_BYTES);
+    if (allowed.length === 0) return;
+    setUploadingCount((n) => n + allowed.length);
+    for (const file of allowed) {
       try {
         await uploadAttachment.mutateAsync(file);
         toast.success(`Uploaded ${file.name}`);

@@ -4,6 +4,14 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # nginx's default is 1MB, which 413s any real upload before it reaches the
+    # backend - a phone photo on an inspection ("Take photo") or a CSV bulk
+    # import. Keep this at/above the backend's multipart max-request-size
+    # (spring.servlet.multipart.* in application.properties, currently 25MB) so
+    # the backend - not nginx - is the single authority on the size limit and
+    # can return a clean JSON 413 rather than nginx's bare HTML one.
+    client_max_body_size 25m;
+
     location = /health {
         return 200 'ok';
         add_header Content-Type text/plain;
