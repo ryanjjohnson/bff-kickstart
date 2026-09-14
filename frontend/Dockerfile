@@ -1,8 +1,8 @@
 FROM node:20-alpine AS build
 # Baked into the built JS/HTML at compile time (Vite's `base` and the client
-# bundle's import.meta.env), so - unlike the backend's context-path, or
-# nginx's own proxy config below - changing these requires a rebuild, not
-# just a container restart with a different env var.
+# bundle's import.meta.env), so - unlike the backend's context-path - changing
+# these requires a rebuild, not just a container restart with a different env
+# var.
 ARG VITE_FRONTEND_BASE_PATH=/bff-kickstart
 # Deliberately not VITE_-prefixed - see frontend/.env's comment on the same
 # variable. Only vite.config.ts reads this at build time; the client bundle
@@ -24,17 +24,52 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM nginx:1.27-alpine
+# --- Assemble a shell-less nginx ---
+# The final image has no shell, so the stock nginx entrypoint's runtime
+# envsubst can't run. But every value it substitutes is a build-time known
+# (the base paths mirror the Vite build args; the backend port is fixed), so
+# render the config HERE, validate it, then stage nginx plus exactly the shared
+# libraries it links (resolved with ldd) for copy into a distroless base.
+# bookworm (glibc), not alpine (musl), to match distroless/base-debian12's ABI.
+FROM nginx:1.27-bookworm AS nginxsrc
 ARG VITE_FRONTEND_BASE_PATH=/bff-kickstart
-# The SPA's own base path must match where it's physically served from - see
-# nginx.conf.template's matching location block (rendered from the
-# FRONTEND_BASE_PATH env var at container start; keep both in sync).
+ARG BACKEND_BASE_PATH=/bff-kickstart-api
+ARG BACKEND_PORT=8081
+# The template names the vars FRONTEND_BASE_PATH/BACKEND_BASE_PATH/BACKEND_PORT;
+# map the build args onto those names for envsubst.
+ENV FRONTEND_BASE_PATH=$VITE_FRONTEND_BASE_PATH
+ENV BACKEND_BASE_PATH=$BACKEND_BASE_PATH
+ENV BACKEND_PORT=$BACKEND_PORT
+COPY nginx.conf.template /tmp/default.conf.template
+RUN set -eux; \
+    # Substitute ONLY our three vars, never nginx's own $uri/$http_host/etc -
+    # the same allowlisting the stock 20-envsubst-on-templates.sh does.
+    envsubst '${FRONTEND_BASE_PATH} ${BACKEND_BASE_PATH} ${BACKEND_PORT}' \
+      < /tmp/default.conf.template > /etc/nginx/conf.d/default.conf; \
+    # (No `nginx -t` here: it resolves the `backend` upstream, which doesn't
+    # exist at build time - only on the compose network at run time.)
+    # Stage nginx, its dynamic-library closure (absolute paths preserved), the
+    # config, the docroot/cache/log skeleton, passwd/group (for the `nginx`
+    # worker user the config drops to), and empty writable run dirs for the pid.
+    mkdir -p /stage/run /stage/var/run; \
+    cp -a --parents /usr/sbin/nginx /stage; \
+    # -L (dereference): ldd reports each lib by its SONAME, which is often a
+    # symlink (libcrypt.so.1 -> libcrypt.so.1.1.0). Copying the symlink alone
+    # would dangle; -L writes a real file at the SONAME path the linker looks up.
+    ldd /usr/sbin/nginx | awk '/=> \//{print $3}' | sort -u \
+      | while read -r lib; do cp -L --parents "$lib" /stage; done; \
+    cp -a --parents /etc/nginx /stage; \
+    cp -a --parents /var/cache/nginx /stage; \
+    cp -a --parents /var/log/nginx /stage; \
+    cp -a --parents /etc/passwd /etc/group /stage
+
+FROM gcr.io/distroless/base-debian12
+ARG VITE_FRONTEND_BASE_PATH=/bff-kickstart
+# nginx binary + libs + config + skeleton, all at their real absolute paths.
+COPY --from=nginxsrc /stage/ /
+# The built SPA, served from its own base path (matches the location block).
 COPY --from=build /build/dist /usr/share/nginx/html${VITE_FRONTEND_BASE_PATH}
-# Rendered to /etc/nginx/conf.d/default.conf at container start via envsubst,
-# substituting ${FRONTEND_BASE_PATH}/${BACKEND_BASE_PATH}/${BACKEND_PORT} from
-# the container's actual environment - see docker-compose.yml. This is the
-# official nginx image's own templating mechanism (see
-# docker-entrypoint.d/20-envsubst-on-templates.sh in the base image), not a
-# custom script.
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 EXPOSE 80
+# Master runs as root (to bind :80); workers drop to `nginx` per nginx.conf.
+# Full path + exec form: no shell, no entrypoint script.
+ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]

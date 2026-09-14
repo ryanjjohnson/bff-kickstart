@@ -124,6 +124,10 @@ services:
         VITE_IDLE_TIMEOUT_SECONDS: ${IDLE_TIMEOUT_SECONDS:-300}
         VITE_IDLE_WARNING_SECONDS: ${IDLE_WARNING_SECONDS:-60}
         VITE_AUTH_RECHECK_SECONDS: ${AUTH_RECHECK_SECONDS:-30}
+        # The shell-less nginx image renders nginx.conf at build time (no runtime
+        # envsubst), so the backend port is a build arg now too - keep it in sync
+        # with the `environment:` BACKEND_PORT below and the backend's own port.
+        BACKEND_PORT: ${BACKEND_PORT:-8081}
     restart: unless-stopped
     environment:
       # Rendered into nginx's config at container start (envsubst) - see
