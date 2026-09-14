@@ -14,8 +14,12 @@ RUN mvn -q -B package -DskipTests
 # eclipse-temurin image's behaviour.
 FROM gcr.io/distroless/java17-debian12
 WORKDIR /app
-COPY --from=build /build/target/backend.jar /app/app.jar
+# The artifact is a WAR now (see pom `war` packaging), but spring-boot-maven-plugin
+# repackages it as an *executable* war, so `java -jar app.war` runs it embedded
+# here exactly as the jar did - the WAR shape only matters when it's instead
+# dropped into a standalone Tomcat.
+COPY --from=build /build/target/backend.war /app/app.war
 EXPOSE 8081
 # Exec form: no shell is involved in launching the JVM. (This overrides the
-# base image's own `java -jar` entrypoint with the explicit jar path.)
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# base image's own `java -jar` entrypoint with the explicit war path.)
+ENTRYPOINT ["java", "-jar", "/app/app.war"]

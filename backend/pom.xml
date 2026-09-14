@@ -14,6 +14,12 @@
   <groupId>com.example.bffkickstart</groupId>
   <artifactId>backend</artifactId>
   <version>0.1.0</version>
+  <!-- war, not jar: produces a deployable WAR for a standalone servlet container
+       (Tomcat 10.1) while spring-boot-maven-plugin still repackages it as an
+       *executable* war, so `java -jar backend.war` (and the container image)
+       runs it embedded exactly as before. See ServletInitializer for the WAR
+       bootstrap + the standalone-container session-cookie fix. -->
+  <packaging>war</packaging>
   <name>bff-kickstart-backend</name>
   <description>BFF Kickstart backend - Spring Boot 3.5 REST + Hibernate + OIDC BFF</description>
 
@@ -37,6 +43,15 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <!-- Embedded Tomcat is `provided`: bundled when running embedded
+         (`java -jar` / the container image), but NOT packed into WEB-INF/lib of
+         the WAR, so a standalone Tomcat uses its own runtime instead of a
+         conflicting embedded copy. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
