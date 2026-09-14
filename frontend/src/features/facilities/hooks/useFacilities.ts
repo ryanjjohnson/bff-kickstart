@@ -4,6 +4,7 @@ import {
   deleteFacility,
   fetchAllFacilities,
   fetchFacilities,
+  fetchFacility,
   updateFacility,
   type FacilitySearchParams,
 } from '../api/facilities';
@@ -14,6 +15,16 @@ export function useFacilities(params: FacilitySearchParams) {
     queryKey: ['facilities', params],
     queryFn: () => fetchFacilities(params),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** One facility by id - powers the facility overview page. Disabled for a
+ *  non-numeric/absent route param so a bad URL doesn't fire a doomed request. */
+export function useFacility(id: number) {
+  return useQuery({
+    queryKey: ['facilities', 'detail', id],
+    queryFn: () => fetchFacility(id),
+    enabled: Number.isInteger(id) && id > 0,
   });
 }
 

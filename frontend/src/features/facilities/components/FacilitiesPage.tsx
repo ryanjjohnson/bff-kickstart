@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Chip, Input, Modal, useOverlayState } from '@heroui/react';
 import { toast } from '@heroui/react';
 import { DataTable, type DataTableColumn } from '../../../components/DataTable';
@@ -27,6 +28,7 @@ const activeFilterOptions = [
 ];
 
 export function FacilitiesPage() {
+  const navigate = useNavigate();
   const { hasRole } = useAuth();
   const canEdit = hasRole('Admin');
   const canManageData = hasRole('Data Manager');
@@ -105,31 +107,36 @@ export function FacilitiesPage() {
         </Chip>
       ),
     },
-    ...(canEdit
-      ? [
-          {
-            key: 'actions',
-            header: '',
-            render: (f: FacilityResponse) => (
-              <div className="flex justify-end gap-2">
-                <Button size="sm" variant="ghost" onPress={() => openEdit(f)}>
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onPress={() => {
-                    setDeleteTarget(f);
-                    deleteDialog.open();
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            ),
-          } satisfies DataTableColumn<FacilityResponse>,
-        ]
-      : []),
+    {
+      // Always present - Overview is available to every role that can view
+      // facilities; Edit/Delete stay Admin-only.
+      key: 'actions',
+      header: '',
+      render: (f: FacilityResponse) => (
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="ghost" onPress={() => navigate(`/facilities/${f.id}`)}>
+            Overview
+          </Button>
+          {canEdit && (
+            <>
+              <Button size="sm" variant="ghost" onPress={() => openEdit(f)}>
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={() => {
+                  setDeleteTarget(f);
+                  deleteDialog.open();
+                }}
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    } satisfies DataTableColumn<FacilityResponse>,
   ];
 
   return (

@@ -8,8 +8,9 @@ import { PermitsPage } from './components/PermitsPage';
 
 export { PermitsPage } from './components/PermitsPage';
 export { useAllPermitsForFacility } from './hooks/usePermits';
-// Needed by the reports feature to type and color-code compliance report rows.
-export { PERMIT_STATUS_COLORS, type PermitStatus, type PermitType } from './types/permit';
+// Needed by the reports feature to type and color-code compliance report rows,
+// and by the facility overview to list a facility's permits.
+export { PERMIT_STATUS_COLORS, type PermitResponse, type PermitStatus, type PermitType } from './types/permit';
 
 export const permitsRoute: AppRoute = {
   path: '/permits',

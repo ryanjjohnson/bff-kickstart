@@ -1,5 +1,5 @@
 import { homeRoute } from './features/home';
-import { facilitiesRoute } from './features/facilities';
+import { facilitiesRoute, facilityOverviewRoute } from './features/facilities';
 import { permitsRoute } from './features/permits';
 import { inspectionsRoute } from './features/inspections';
 import { reportsRoute } from './features/reports';
@@ -15,6 +15,7 @@ import { dailyReportsRoute } from './features/daily-reports';
 export const APP_ROUTES = [
   homeRoute,
   facilitiesRoute,
+  facilityOverviewRoute,
   permitsRoute,
   inspectionsRoute,
   reportsRoute,

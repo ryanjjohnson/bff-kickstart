@@ -7,8 +7,11 @@ import type { AppRoute } from '../../lib/appRoute';
 import { InspectionsPage } from './components/InspectionsPage';
 
 export { InspectionsPage } from './components/InspectionsPage';
-// Needed by the reports feature to type and color-code compliance report rows.
-export { INSPECTION_OUTCOME_COLORS, type InspectionOutcome } from './types/inspection';
+// Needed by the facility overview to list a facility's inspections.
+export { useInspections } from './hooks/useInspections';
+// Needed by the reports feature to type and color-code compliance report rows,
+// and by the facility overview (InspectionResponse) to render inspection rows.
+export { INSPECTION_OUTCOME_COLORS, type InspectionOutcome, type InspectionResponse } from './types/inspection';
 
 export const inspectionsRoute: AppRoute = {
   path: '/inspections',

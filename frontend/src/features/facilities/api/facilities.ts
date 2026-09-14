@@ -18,6 +18,11 @@ export async function fetchFacilities(params: FacilitySearchParams): Promise<Pag
   return data;
 }
 
+export async function fetchFacility(id: number): Promise<FacilityResponse> {
+  const { data } = await apiClient.get<FacilityResponse>(`/facilities/${id}`);
+  return data;
+}
+
 export async function fetchAllFacilities(): Promise<FacilityResponse[]> {
   const { data } = await apiClient.get<Page<FacilityResponse>>('/facilities', {
     params: { page: 0, size: 500 },
