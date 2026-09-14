@@ -164,7 +164,7 @@ export function DataTable<T extends { id: number | string }>({
                   type="button"
                   onClick={() => onSortChange(column.key)}
                   aria-pressed={active}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-sm border px-3 py-1 text-xs font-medium transition-colors ${
                     active
                       ? 'border-transparent bg-[var(--accent)] text-[var(--accent-foreground)]'
                       : 'border-default-300 text-foreground/70 hover:bg-default-100'
@@ -179,7 +179,7 @@ export function DataTable<T extends { id: number | string }>({
         )}
 
         {rows.length === 0 ? (
-          <div className="rounded-lg border border-default-200 py-10 text-center">
+          <div className="rounded-sm border border-default-200 py-10 text-center">
             {isLoading ? (
               <div className="flex justify-center">
                 <Spinner />
@@ -191,7 +191,7 @@ export function DataTable<T extends { id: number | string }>({
         ) : (
           <ul className="flex flex-col gap-3">
             {rows.map((row) => (
-              <li key={row.id} className="rounded-lg border border-default-200 bg-content1 p-4 shadow-sm">
+              <li key={row.id} className="rounded-sm border border-default-200 bg-content1 p-4 shadow-sm">
                 {titleColumn && <div className="text-base font-semibold">{titleColumn.render(row)}</div>}
                 {fieldColumns.length > 0 && (
                   <dl className="mt-2 grid grid-cols-[minmax(0,auto)_1fr] gap-x-4 gap-y-1.5 text-sm">

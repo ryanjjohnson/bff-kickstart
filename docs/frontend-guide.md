@@ -369,6 +369,47 @@ That's it - `App.tsx` picks it up as a new `<Route>` (wrapped in `RequireAuth`, 
 
 The generator's templates live in `plop-templates/feature/` and its logic in `plopfile.mjs` - edit those if the generated skeleton itself needs to change project-wide.
 
+## Bringing it together: a cross-feature overview page
+
+The CRUD walkthrough above builds one self-contained feature. The other half of the job is
+composing several of them - a dashboard or detail page that pulls data from more than one feature
+onto a single screen. The **facility overview** (`features/facilities/components/FacilityOverviewPage.tsx`,
+route `/facilities/:id`, reached from the **Overview** action on the Facilities table) is the worked
+example, and it's mostly an exercise in respecting [the feature-module boundary rule](#the-feature-module-boundary-rule).
+
+It shows one facility's own permits, inspections, and compliance rows side by side. It owns none of
+that data - each piece comes from the feature that does, through that feature's `index.ts`:
+
+```ts
+// features/facilities/components/FacilityOverviewPage.tsx
+import { useFacility } from '../hooks/useFacilities';              // this feature: internal import is fine
+import { PERMIT_STATUS_COLORS, useAllPermitsForFacility } from '../../permits';   // sibling: via its barrel
+import { INSPECTION_OUTCOME_COLORS, useInspections } from '../../inspections';    // sibling: via its barrel
+import { useComplianceReport } from '../../reports';                              // sibling: via its barrel
+```
+
+The rule in practice: those sibling hooks and color-maps had to be **added to the exporting feature's
+`index.ts`** before this page could use them (e.g. `permits/index.ts` now re-exports `PermitResponse`,
+`inspections/index.ts` re-exports `useInspections`/`InspectionResponse`, `reports/index.ts` re-exports
+`useComplianceReport`/`ComplianceReportRow`). You widen the public surface; you never deep-import
+`../../inspections/hooks/useInspections`. That one discipline is what lets a composed page reuse
+existing query hooks - and their TanStack Query caching - instead of re-fetching or duplicating logic.
+
+Two more things this page demonstrates:
+
+- **Filtering to one parent.** Permits and inspections carry a `facilityId`, so they filter by id
+  (`useAllPermitsForFacility(id)`, `useInspections({ facilityId: id, ... })`). Compliance rows only
+  carry `facilityName`, so they match on that instead - a reminder to check what join key a response
+  actually exposes rather than assuming an id is always there.
+- **A route that isn't a nav destination.** The overview is a second `AppRoute` from
+  `facilities/index.ts` with a param path and `showInNav: false`, so `App.tsx` registers it as a
+  `<Route>` but `AppShell.tsx` leaves it out of the nav bar. Its entry point is instead the
+  `Overview` action rendered per-row on the Facilities table (via `useNavigate`), shown to every role
+  that can view facilities while Edit/Delete stay Admin-only.
+
+Think of it as the read-side counterpart to the CRUD feature: same boundary rule, but you're
+*consuming* other features' public surfaces to aggregate, not defining a new resource.
+
 ## Validation
 
 Every form validates on **both** sides, and the two must be kept in sync by hand (there's no schema-sharing between Java and TypeScript here):
