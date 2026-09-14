@@ -5,7 +5,11 @@
 #
 # The SSO hostname's /admin* (Keycloak admin console + admin REST API) routes
 # to a 404, not the container - never exposed to the public internet, LAN-only.
-# Rule order matters: cloudflared uses first-match, so this must precede the
+# The bare root (^/$) is 404'd too: Keycloak redirects / to its admin console,
+# and because KC_HOSTNAME_ADMIN is the LAN URL (so the console works on the LAN),
+# that public 302 would otherwise leak the box's internal LAN IP:port in a
+# Location header. Auth paths (/realms/*, /resources/*) stay public.
+# Rule order matters: cloudflared uses first-match, so these must precede the
 # general SSO rule below.
 #
 # Required env:
@@ -59,6 +63,7 @@ api PUT "/accounts/$ACCOUNT_ID/cfd_tunnel/$TUNNEL_ID/configurations" "{
   \"config\": { \"ingress\": [
     {\"hostname\": \"$APP_HOSTNAME\", \"service\": \"http://frontend:80\"},
     {\"hostname\": \"$SSO_HOSTNAME\", \"path\": \"^/admin\", \"service\": \"http_status:404\"},
+    {\"hostname\": \"$SSO_HOSTNAME\", \"path\": \"^/\$\", \"service\": \"http_status:404\"},
     {\"hostname\": \"$SSO_HOSTNAME\", \"service\": \"http://keycloak:8080\"},
     {\"service\": \"http_status:404\"}
   ]}}" | jqpy "assert r['success'], r; print('ingress ok', file=sys.stderr)"

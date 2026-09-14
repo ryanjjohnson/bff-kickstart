@@ -4,6 +4,11 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Don't advertise the nginx version in Server: / error pages. Only visible to
+    # anything that reaches the origin directly (the Cloudflare tunnel is
+    # outbound-only, so that's LAN-only today) - cheap hygiene regardless.
+    server_tokens off;
+
     # nginx's default is 1MB, which 413s any real upload before it reaches the
     # backend - a phone photo on an inspection ("Take photo") or a CSV bulk
     # import. Keep this at/above the backend's multipart max-request-size
@@ -121,10 +126,56 @@ server {
         proxy_cookie_path / /;
     }
 
-    # The SPA build output (base: '${FRONTEND_BASE_PATH}/' in vite.config.ts,
-    # via VITE_FRONTEND_BASE_PATH) is copied into this same subdirectory in the
-    # Dockerfile, so root + try_files here mirrors the physical layout one-to-one.
+    # Content-addressed build assets (index-<hash>.js/.css, fonts, images) never
+    # change under a given name - safe to cache hard, forever. This is what makes
+    # a deploy cheap: only the tiny un-hashed control files below must refetch.
+    location ${FRONTEND_BASE_PATH}/assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # The PWA control files carry no content hash, so they MUST always be
+    # revalidated - otherwise a new build is invisible until a stale copy
+    # expires. no-cache also makes Cloudflare bypass edge-caching them (it does
+    # not cache no-cache/no-store/private), so the service worker actually sees
+    # each new build instead of a CDN copy that can lag hours behind a deploy.
+    location = ${FRONTEND_BASE_PATH}/sw.js {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+    location = ${FRONTEND_BASE_PATH}/registerSW.js {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+    location = ${FRONTEND_BASE_PATH}/manifest.webmanifest {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
+    # The SPA shell. Its index.html is the un-hashed entry point that names the
+    # current hashed bundle, so it must never be cached either. This is also the
+    # right place for the document security headers (they matter for the HTML
+    # document, not for JS/CSS subresources):
+    #   CSP    - backstop against XSS; 'unsafe-inline' on styles only because
+    #            HeroUI/React emit inline style attributes (scripts stay 'self',
+    #            the build has no inline <script>). Everything is same-origin -
+    #            no CDN, self-hosted fonts - so the rest is 'self'.
+    #   HSTS   - HTTPS terminates at Cloudflare; this pins the browser to https.
+    #            Deliberately NO 'preload': that directive invites submitting the
+    #            whole morningside.site apex to the browser preload list, which
+    #            would force HTTPS on every sibling subdomain - including the
+    #            HTTP-only LAN services on this domain (OPNsense, Frigate, ...).
+    #   frame  - X-Frame-Options + frame-ancestors 'none' = no clickjacking.
+    # The build output (base '${FRONTEND_BASE_PATH}/' in vite.config.ts) is copied
+    # into this subdirectory in the Dockerfile, so root + try_files mirrors the
+    # physical layout one-to-one.
     location ${FRONTEND_BASE_PATH}/ {
+        add_header Cache-Control "no-cache";
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+        add_header X-Frame-Options "DENY";
+        add_header X-Content-Type-Options "nosniff";
+        add_header Referrer-Policy "no-referrer";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
         try_files $uri $uri/ ${FRONTEND_BASE_PATH}/index.html;
     }
 }
