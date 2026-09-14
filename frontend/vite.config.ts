@@ -91,6 +91,10 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          // autoUpdate already sets skipWaiting + clientsClaim (the new worker
+          // activates and takes over at once); this drops the previous build's
+          // now-orphaned precache so caches don't pile up across deploys.
+          cleanupOutdatedCaches: true,
           // SPA fallback for client-side routes only - every backend-owned
           // path (see backendProxy above) must reach the network, never the
           // cached index.html. A cached response to an OAuth2 redirect or an
