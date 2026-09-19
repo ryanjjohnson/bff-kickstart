@@ -1,4 +1,4 @@
-![AI Code Warning](https://shields.io)
+![AI Usage: Assisted](https://shields.io)
 
 # BFF Kickstart
 
