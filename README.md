@@ -1,3 +1,5 @@
+![AI Code Warning](https://shields.io)
+
 # BFF Kickstart
 
 A full-stack starter where the browser never touches a token: React SPA + Spring Boot
