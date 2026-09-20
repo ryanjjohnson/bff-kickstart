@@ -1,13 +1,16 @@
 package com.example.bffkickstart.configurations;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.example.bffkickstart.exceptions.ApiError;
 import com.example.bffkickstart.security.CsrfCookieFilter;
 import com.example.bffkickstart.security.KeycloakRealmRoleConverter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -181,6 +184,23 @@ public class SecurityConfig {
     @Bean
     public OidcSessionRegistry oidcSessionRegistry() {
         return new InMemoryOidcSessionRegistry();
+    }
+
+    /**
+     * Applies the reverse proxy's X-Forwarded-* headers (Host + Prefix from nginx)
+     * so Spring generates correct absolute URLs - the OAuth2 redirect_uri and
+     * {baseUrl} in particular - even though the app sits behind a path-rewriting
+     * proxy. This replaces {@code server.forward-headers-strategy=framework},
+     * which Spring Boot 4 no longer honors for a WAR in a standalone container
+     * (see the 4.0 migration guide). Registered explicitly at HIGHEST_PRECEDENCE
+     * so it runs before the Spring Security filter chain, and works identically
+     * whether the app runs embedded or as a deployed WAR.
+     */
+    @Bean
+    public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+        FilterRegistrationBean<ForwardedHeaderFilter> registration = new FilterRegistrationBean<>(new ForwardedHeaderFilter());
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 
     private AuthenticationEntryPoint jsonAuthenticationEntryPoint(ObjectMapper objectMapper) {

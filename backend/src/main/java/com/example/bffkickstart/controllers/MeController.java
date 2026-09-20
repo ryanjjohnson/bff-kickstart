@@ -41,12 +41,14 @@ public class MeController {
     private final String clientSecret;
 
     public MeController(OAuth2AuthorizedClientService authorizedClientService,
-                         RestClient.Builder restClientBuilder,
                          @Value("${app.keycloak.introspection-uri}") String introspectionUri,
                          @Value("${spring.security.oauth2.client.registration.keycloak.client-id}") String clientId,
                          @Value("${spring.security.oauth2.client.registration.keycloak.client-secret}") String clientSecret) {
         this.authorizedClientService = authorizedClientService;
-        this.restClient = restClientBuilder.build();
+        // Spring Boot 4 no longer auto-configures a RestClient.Builder bean by
+        // default; build a plain client here (it still picks up the Jackson
+        // message converters from the classpath for the introspection call).
+        this.restClient = RestClient.create();
         this.introspectionUri = introspectionUri;
         this.clientId = clientId;
         this.clientSecret = clientSecret;

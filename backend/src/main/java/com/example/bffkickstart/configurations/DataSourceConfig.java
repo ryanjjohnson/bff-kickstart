@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -39,15 +38,15 @@ import java.util.Map;
  * ReportingDataSourceConfig) also makes Spring Boot back off its implicit repository scanning for
  * the *whole* application - so this class re-declares scanning for the primary side explicitly too.
  * <p>
- * Same story for Flyway: ReportingDataSourceConfig's own manually-built FlywayMigrationInitializer
- * bean makes Spring Boot's auto-configured one - which would otherwise have run this datasource's
- * migrations (db/migration) - back off entirely too (@ConditionalOnMissingBean(
- * FlywayMigrationInitializer.class) matches on type, not target datasource). So this datasource
- * gets its own manually-built Flyway + FlywayMigrationInitializer as well, and the
- * EntityManagerFactory is made to explicitly depend on it (@DependsOn) so migrations are
- * guaranteed to run before Hibernate touches the schema - a guarantee Spring Boot's own
- * auto-configuration normally provides for you, but only for datasources it's still managing
- * itself.
+ * Same story for Flyway: this app depends only on flyway-core, not Spring Boot 4's
+ * spring-boot-flyway auto-configuration module, so nothing runs migrations for it -
+ * each datasource builds its own Flyway and calls migrate() itself. The
+ * EntityManagerFactory is made to explicitly depend on that bean (@DependsOn) so
+ * migrations are guaranteed to run before Hibernate touches the schema. (Under
+ * Spring Boot 3 this used the framework's FlywayMigrationInitializer, which also
+ * forced Boot's auto-configured Flyway to back off; Boot 4 moved that class into
+ * the optional spring-boot-flyway module, and with no auto-Flyway present there's
+ * nothing to suppress - migrate() is called directly instead.)
  */
 @Configuration
 @EnableJpaRepositories(
@@ -64,14 +63,15 @@ public class DataSourceConfig {
     }
 
     @Bean
-    public FlywayMigrationInitializer kickstartTxFlywayInitializer(
+    public Flyway kickstartTxFlywayInitializer(
             @Qualifier("kickstartTxDataSource") DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
                 .load();
-        return new FlywayMigrationInitializer(flyway);
+        flyway.migrate();
+        return flyway;
     }
 
     @Bean

@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -25,8 +24,8 @@ import java.util.Map;
  * datasource (DataSourceConfig): its own HikariDataSource, its own EntityManagerFactory/
  * TransactionManager (Spring Data JPA ties repositories to exactly one EntityManagerFactory, so a
  * second datasource needs its own full JPA stack, not just a second DataSource bean), and its own
- * Flyway migration history via a manually-constructed FlywayMigrationInitializer - Spring Boot's
- * auto-configured Flyway only ever manages one (the @Primary) datasource.
+ * Flyway migration history via a manually-built Flyway that runs migrate() itself (see
+ * DataSourceConfig for why nothing auto-configures Flyway here under Spring Boot 4).
  */
 @Configuration
 @EnableJpaRepositories(
@@ -67,12 +66,13 @@ public class ReportingDataSourceConfig {
     }
 
     @Bean
-    public FlywayMigrationInitializer kickstartRptFlywayInitializer(
+    public Flyway kickstartRptFlywayInitializer(
             @Qualifier("kickstartRptDataSource") DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration-rpt")
                 .load();
-        return new FlywayMigrationInitializer(flyway);
+        flyway.migrate();
+        return flyway;
     }
 }
